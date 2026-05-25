@@ -96,53 +96,46 @@ const AdminLogin = () => {
           password: formData.password,
         }),
       });
-      // 1. Extraer SIEMPRE el JSON de la respuesta primero
-      const data = await response.json();
 
-      // --- MANEJO DE ERROR 401 (Credenciales incorrectas) ---
+      // 🚨 CONTROL DE ERRORES DEL BACKEND (401: Credenciales Incorrectas)
       if (response.status === 401) {
         const nextAttempts = attemptsLeft - 1;
         setAttemptsLeft(nextAttempts);
-        
+
         if (nextAttempts <= 0) {
-          setErrorMessage("Acceso bloqueado temporalmente.");
+          setErrorMessage("Has agotado tus 3 intentos. Acceso bloqueado temporalmente.");
         } else {
-          // Extrae el texto del backend (ej: data.mensaje o data.error)
-          const textoBackend = data.mensaje || data.error || "Credenciales incorrectas";
-          
-          // Guardamos el error en el campo 'email' para activar tus estilos y vibración
-          setErrors({ 
-            email: `${textoBackend}. Quedan ${nextAttempts} intentos.` 
-          });
-          
-          // Activamos la vibración que ya programaste en el correo
-          triggerShake("email");
+          setErrorMessage(`Credenciales inválidas. Te quedan ${nextAttempts} intentos.`);
         }
         return;
       }
 
-      // --- MANEJO DE ERROR 403 (Sin permisos de Admin) ---
+      // 🚫 CONTROL DE ERRORES DEL BACKEND (403: Acceso Denegado / Rol incorrecto)
       if (response.status === 403) {
-        const textoBackend = data.mensaje || data.error || "Acceso denegado: Se requieren permisos de ADMIN.";
-        
-        // Al ser un problema de permisos del usuario, lo reflejamos en el correo
-        setErrors({ email: textoBackend });
-        triggerShake("email");
+        try {
+          const errorData = await response.json();
+          setErrorMessage(errorData.detail || "Acceso denegado: No tienes permisos de administrador.");
+        } catch {
+          setErrorMessage("Acceso denegado: Se requieren permisos de ADMIN (Artesano).");
+        }
         return;
       }
 
-      // Si el estado no es exitoso (y no es 401/403) lanzamos error genérico
-      if (!response.ok) throw new Error(data.mensaje || "Error en el servidor");
+      // Si es cualquier otro error del servidor (500, 502, etc)
+      if (!response.ok) throw new Error("Error en la respuesta del servidor");
 
-      // --- LOGIN EXITOSO (200 OK) ---
+      const data = await response.json();
+      
+      // Guardar el token si tu backend lo retorna
       if (data.access_token) {
         localStorage.setItem("token", data.access_token);
       }
+
       alert("¡Inicio de sesión exitoso!");
+      // Aquí puedes colocar tu redirección: window.location.href = "/admin/dashboard";
 
     } catch (error) {
-      // Errores de red o caídas de servidor externas
-      setErrorMessage("Error de red o comunicación con el servidor.");
+      setErrorMessage("Error de red o comunicación con el servidor. Verifica tu conexión.");
     } finally {
       setIsSubmitting(false);
     }
@@ -176,7 +169,7 @@ const AdminLogin = () => {
 
         {/* CARD CONTENEDORA */}
         <div className="w-full max-w-[460px] mx-auto box-border" style={{ minWidth: "320px" }}>
-          <img src="/logo(3).webp" alt="C3" className="mx-auto mb-4"style={{with:"auto",height:"70px",margin:"0 auto"}} />
+          <img src="/logo(3).webp" alt="C3" className="mx-auto mb-4" />
 
           <form
             onSubmit={handleSubmit}
@@ -349,10 +342,8 @@ const AdminLogin = () => {
                   </div>
                 )}
 
-          
-            
-            {/* Botón de Iniciar Sesión */}
-            <button
+             {/* Botón de Iniciar Sesión */}
+             <button
                   type="submit"
                   disabled={isSubmitting || attemptsLeft <= 0}
                   className={`btn-c3 w-full h-[42px] font-semibold rounded-md shadow-sm transition-all active:scale-[0.99] text-white pt-2 flex  w-full

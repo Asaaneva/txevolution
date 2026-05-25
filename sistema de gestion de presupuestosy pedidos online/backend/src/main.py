@@ -13,16 +13,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 origins = [
-    "https://qzt382-5173.csb.app//login",
+    "https://qzt382-5173.csb.app/login",
     "https://localhost:5173",
-    "*"  # El comodín permite que cualquier entorno cloud se conecte
+    "*"
+
+    # El comodín permite que cualquier entorno cloud se conecte
 ]
 
 # 2. INICIALIZACIÓN DE LA APP
 app = FastAPI(title=settings.PROJECT_NAME)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
