@@ -9,7 +9,7 @@ const AdminLogin = () => {
   const [focusedField, setFocusedField] = useState("");
   const [attemptsLeft, setAttemptsLeft] = useState(3);
   const [errorMessage, setErrorMessage] = useState("");
-  
+
   // Estado para disparar la animación de vibración por input
   const [shakeField, setShakeField] = useState({
     email: false,
@@ -34,7 +34,8 @@ const AdminLogin = () => {
   const validateForm = () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d\.,\*@#\$%\^&\+=\!]{8,}$/;
+    const passwordRegex =
+      /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d\.,\*@#\$%\^&\+=\!]{8,}$/;
 
     // VALIDACIÓN DE CORREO
     if (!formData.email.trim()) {
@@ -50,10 +51,12 @@ const AdminLogin = () => {
       newErrors.password = "La contraseña es obligatoria.";
       triggerShake("password");
     } else if (formData.password.length < 8) {
-      newErrors.password = "Contraseña insegura. Debe contener mínimo 8 caracteres.";
+      newErrors.password =
+        "Contraseña insegura. Debe contener mínimo 8 caracteres.";
       triggerShake("password");
     } else if (!passwordRegex.test(formData.password)) {
-      newErrors.password = "La estructura debe contener al menos letras y números.";
+      newErrors.password =
+        "La estructura debe contener al menos letras y números.";
       triggerShake("password");
     }
 
@@ -63,10 +66,12 @@ const AdminLogin = () => {
   // MANEJADOR DE ENVÍO CONECTADO AL BACKEND Y CONTROL DE INTENTOS
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // 1. Verificación inmediata de bloqueo por intentos
     if (attemptsLeft <= 0) {
-      setErrorMessage("Acceso bloqueado. Demasiados intentos fallidos. Intenta más tarde.");
+      setErrorMessage(
+        "Acceso bloqueado. Demasiados intentos fallidos. Intenta más tarde."
+      );
       return;
     }
 
@@ -78,11 +83,10 @@ const AdminLogin = () => {
     }
 
     setIsSubmitting(true);
-    setErrorMessage(""); 
+    setErrorMessage("");
 
     try {
-      const urlFinal = "https://qzt382-8000.csb.app/login";
-      
+      const urlFinal = `${import.meta.env.VITE_API_URL}/login`;
       const response = await fetch(urlFinal, {
         method: "POST",
         mode: "cors",
@@ -103,9 +107,13 @@ const AdminLogin = () => {
         setAttemptsLeft(nextAttempts);
 
         if (nextAttempts <= 0) {
-          setErrorMessage("Has agotado tus 3 intentos. Acceso bloqueado temporalmente.");
+          setErrorMessage(
+            "Has agotado tus 3 intentos. Acceso bloqueado temporalmente."
+          );
         } else {
-          setErrorMessage(`Credenciales inválidas. Te quedan ${nextAttempts} intentos.`);
+          setErrorMessage(
+            `Credenciales inválidas. Te quedan ${nextAttempts} intentos.`
+          );
         }
         return;
       }
@@ -114,9 +122,14 @@ const AdminLogin = () => {
       if (response.status === 403) {
         try {
           const errorData = await response.json();
-          setErrorMessage(errorData.detail || "Acceso denegado: No tienes permisos de administrador.");
+          setErrorMessage(
+            errorData.detail ||
+              "Acceso denegado: No tienes permisos de administrador."
+          );
         } catch {
-          setErrorMessage("Acceso denegado: Se requieren permisos de ADMIN (Artesano).");
+          setErrorMessage(
+            "Acceso denegado: Se requieren permisos de ADMIN (Artesano)."
+          );
         }
         return;
       }
@@ -125,7 +138,7 @@ const AdminLogin = () => {
       if (!response.ok) {
         throw new Error("Error en la respuesta del servidor");
       }
-      
+
       // Guardar el token si tu backend lo retorna
       if (data.access_token) {
         localStorage.setItem("token", data.access_token);
@@ -133,9 +146,10 @@ const AdminLogin = () => {
 
       alert("¡Inicio de sesión exitoso!");
       // Aquí puedes colocar tu redirección: window.location.href = "/admin/dashboard";
-
     } catch (error) {
-      setErrorMessage("Error de red o comunicación con el servidor. Verifica tu conexión.");
+      setErrorMessage(
+        "Error de red o comunicación con el servidor. Verifica tu conexión."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -168,7 +182,10 @@ const AdminLogin = () => {
         </h1>
 
         {/* CARD CONTENEDORA */}
-        <div className="w-full max-w-[460px] mx-auto box-border" style={{ minWidth: "320px" }}>
+        <div
+          className="w-full max-w-[460px] mx-auto box-border"
+          style={{ minWidth: "320px" }}
+        >
           <img src="/logo(3).webp" alt="C3" className="mx-auto mb-4" />
 
           <form
@@ -196,14 +213,20 @@ const AdminLogin = () => {
                   onChange={handleChange}
                   onFocus={() => setFocusedField("email")}
                   onBlur={() => setFocusedField("")}
-                  className={`login-input ${shakeField.email ? "animate-shake" : ""}`}
+                  className={`login-input ${
+                    shakeField.email ? "animate-shake" : ""
+                  }`}
                   style={{
                     width: "100%",
                     height: "42px",
                     padding: "0 16px",
                     boxSizing: "border-box",
                     borderColor: errors.email ? "#dc2626" : "#cccccc",
-                    backgroundColor: errors.email ? "#fef2f2" : (attemptsLeft <= 0 ? "#f3f4f6" : "#e5e5e5"),
+                    backgroundColor: errors.email
+                      ? "#fef2f2"
+                      : attemptsLeft <= 0
+                      ? "#f3f4f6"
+                      : "#e5e5e5",
                     borderWidth: "1px",
                     borderStyle: "solid",
                     display: "block",
@@ -216,7 +239,9 @@ const AdminLogin = () => {
                   </div>
                 )}
                 {errors.email && (
-                  <p className="text-red-600 text-xs font-medium mt-1.5">{errors.email}</p>
+                  <p className="text-red-600 text-xs font-medium mt-1.5">
+                    {errors.email}
+                  </p>
                 )}
               </div>
             </div>
@@ -269,7 +294,7 @@ const AdminLogin = () => {
                       outline: "none",
                     }}
                   />
-                   <button
+                  <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="outline-none focus:outline-none cursor-pointer select-none flex items-center justify-center h-8 w-8 hover:bg-gray-200/50 rounded-full transition-colors"
@@ -314,14 +339,34 @@ const AdminLogin = () => {
                 {/* TOOLTIP DE REQUISITOS */}
                 {focusedField === "password" && !errors.password && (
                   <div className="absolute z-20 w-full mt-2 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl opacity-98 border border-gray-700 font-sans leading-relaxed">
-                    <p className="font-bold border-b border-gray-700 pb-1 mb-1.5 text-amber-400">🔒 Requisitos de Seguridad:</p>
-                    <p className="mb-1">• Mínimo 8 caracteres con letras y números.</p>
-                    <p className="mb-1"><span className="text-green-400 font-bold">✔️ Acepta:</span> <code className="bg-gray-800 px-1 py-0.5 rounded text-green-300 font-mono font-bold">. , * @ # $ % & + = !</code></p>
-                    <p><span className="text-red-400 font-bold">❌ Prohibidos:</span> <code className="bg-gray-800 px-1 py-0.5 rounded text-red-300 font-mono font-bold">/ \ &lt; &gt; " ' ; : ( ) [ ]</code></p>
+                    <p className="font-bold border-b border-gray-700 pb-1 mb-1.5 text-amber-400">
+                      🔒 Requisitos de Seguridad:
+                    </p>
+                    <p className="mb-1">
+                      • Mínimo 8 caracteres con letras y números.
+                    </p>
+                    <p className="mb-1">
+                      <span className="text-green-400 font-bold">
+                        ✔️ Acepta:
+                      </span>{" "}
+                      <code className="bg-gray-800 px-1 py-0.5 rounded text-green-300 font-mono font-bold">
+                        . , * @ # $ % & + = !
+                      </code>
+                    </p>
+                    <p>
+                      <span className="text-red-400 font-bold">
+                        ❌ Prohibidos:
+                      </span>{" "}
+                      <code className="bg-gray-800 px-1 py-0.5 rounded text-red-300 font-mono font-bold">
+                        / \ &lt; &gt; " ' ; : ( ) [ ]
+                      </code>
+                    </p>
                   </div>
                 )}
                 {errors.password && (
-                  <p className="text-red-600 text-xs font-medium mt-1.5">{errors.password}</p>
+                  <p className="text-red-600 text-xs font-medium mt-1.5">
+                    {errors.password}
+                  </p>
                 )}
               </div>
             </div>
@@ -330,38 +375,57 @@ const AdminLogin = () => {
             <div className="flex flex-col md:flex-row md:items-start gap-3 w-full mt-2">
               {/* Espacio en blanco en desktop (30%) para mantener la alineación perfecta */}
               <div className="hidden md:block w-[30%] flex-none"></div>
-              
+
               {/* Contenedor dinámico (70%) que maneja sus propios espacios de forma inteligente */}
               <div className="flex-1 w-full flex flex-col gap-4">
-                
                 {/* Banner de Errores Reales del Backend (401, 403, Bloqueos y Red) */}
                 {errorMessage && (
                   <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg text-center font-medium shadow-sm transition-all animate-fade-in">
-                    <span className="block font-bold mb-0.5">⚠️ Control de Seguridad</span>
+                    <span className="block font-bold mb-0.5">
+                      ⚠️ Control de Seguridad
+                    </span>
                     {errorMessage}
                   </div>
                 )}
 
-             {/* Botón de Iniciar Sesión */}
-             <button
+                {/* Botón de Iniciar Sesión */}
+                <button
                   type="submit"
                   disabled={isSubmitting || attemptsLeft <= 0}
                   className={`btn-c3 w-full h-[42px] font-semibold rounded-md shadow-sm transition-all active:scale-[0.99] text-white pt-2 flex  w-full
-                    ${attemptsLeft <= 0 
-                      ? 'bg-gray-400 cursor-not-allowed opacity-80' 
-                      : 'bg-amber-800 hover:bg-amber-900'
+                    ${
+                      attemptsLeft <= 0
+                        ? "bg-gray-400 cursor-not-allowed opacity-80"
+                        : "bg-amber-800 hover:bg-amber-900"
                     }`}
-                  style={{ margin: 0  }} // Rompe la rigidez del gap del form principal
+                  style={{ margin: 0 }} // Rompe la rigidez del gap del form principal
                 >
-                  {attemptsLeft <= 0 ? "Acceso Bloqueado" : isSubmitting ? "Autenticando..." : "Iniciar Sesión"}
+                  {attemptsLeft <= 0
+                    ? "Acceso Bloqueado"
+                    : isSubmitting
+                    ? "Autenticando..."
+                    : "Iniciar Sesión"}
                 </button>
               </div>
             </div>
 
             {/* ENLACES AL PIE */}
-            <div className="flex justify-center gap-8 text-xs font-normal text-gray-600 pt-1 w-full" style={{ textAlign: "center" }}>
-              <a href="#forgot" className="hover:text-black hover:underline transition-colors">¿Olvidó su contraseña?</a>
-              <a href="#register" className="hover:text-black hover:underline transition-colors">Regístrate</a>
+            <div
+              className="flex justify-center gap-8 text-xs font-normal text-gray-600 pt-1 w-full"
+              style={{ textAlign: "center" }}
+            >
+              <a
+                href="#forgot"
+                className="hover:text-black hover:underline transition-colors"
+              >
+                ¿Olvidó su contraseña?
+              </a>
+              <a
+                href="#register"
+                className="hover:text-black hover:underline transition-colors"
+              >
+                Regístrate
+              </a>
             </div>
           </form>
         </div>
@@ -369,7 +433,8 @@ const AdminLogin = () => {
 
       {/* FOOTER */}
       <footer className="py-4 text-center text-xs text-gray-400 font-normal z-10">
-        &copy; {new Date().getFullYear()} EVOLVEX. Todos los derechos reservados.
+        &copy; {new Date().getFullYear()} EVOLVEX. Todos los derechos
+        reservados.
       </footer>
     </div>
   );
