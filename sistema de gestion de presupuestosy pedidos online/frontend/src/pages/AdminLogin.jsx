@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+
 const AdminLogin = () => {
   // Estados de control del formulario
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -6,7 +7,9 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [focusedField, setFocusedField] = useState("");
-
+  const [attemptsLeft, setAttemptsLeft] = useState(3);
+  const [errorMessage, setErrorMessage] = useState("");
+  
   // Estado para disparar la animación de vibración por input
   const [shakeField, setShakeField] = useState({
     email: false,
@@ -17,6 +20,8 @@ const AdminLogin = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+    // Si el usuario vuelve a escribir, limpiamos el error del backend para darle espacio
+    if (errorMessage) setErrorMessage("");
   };
 
   const triggerShake = (fieldName) => {
@@ -29,10 +34,7 @@ const AdminLogin = () => {
   const validateForm = () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    // Regex de contraseña balanceada para desarrollo local
-    const passwordRegex =
-      /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d\.,\*@#\$%\^&\+=\!]{8,}$/;
+    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d\.,\*@#\$%\^&\+=\!]{8,}$/;
 
     // VALIDACIÓN DE CORREO
     if (!formData.email.trim()) {
@@ -48,46 +50,39 @@ const AdminLogin = () => {
       newErrors.password = "La contraseña es obligatoria.";
       triggerShake("password");
     } else if (formData.password.length < 8) {
-      newErrors.password =
-        "Contraseña insegura. Debe contener mínimo 8 caracteres.";
+      newErrors.password = "Contraseña insegura. Debe contener mínimo 8 caracteres.";
       triggerShake("password");
     } else if (!passwordRegex.test(formData.password)) {
-      newErrors.password =
-        "La estructura debe contener al menos letras y números.";
+      newErrors.password = "La estructura debe contener al menos letras y números.";
       triggerShake("password");
     }
 
     return newErrors;
   };
 
-  // FUNCIÓN CONECTADA AL BACKEND REAL (Limpia y corregida)
-  // FUNCIÓN CONECTADA AL BACKEND REAL (¡Corregida y Sin Errores de Sintaxis!)
+  // MANEJADOR DE ENVÍO CONECTADO AL BACKEND Y CONTROL DE INTENTOS
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("1. ¡Botón presionado! Iniciando handleSubmit...");
+    
+    // 1. Verificación inmediata de bloqueo por intentos
+    if (attemptsLeft <= 0) {
+      setErrorMessage("Acceso bloqueado. Demasiados intentos fallidos. Intenta más tarde.");
+      return;
+    }
 
+    // 2. Validación de formato local
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
-      console.log("❌ Error de validación local:", validationErrors);
       setErrors(validationErrors);
       return;
     }
 
     setIsSubmitting(true);
-    setErrors({});
+    setErrorMessage(""); 
 
     try {
-          
-      console.log("🚀 Enviando petición de control a:", urlFinal);
-
-      // 🟢 CONSTRUIMOS UN FORM DATA (Por si FastAPI usa OAuth2 nativo)
-      const formDataToSend = new URLSearchParams();
-      // Ojo: FastAPI nativo a veces busca 'username' en vez de 'email'
-      formDataToSend.append("username", formData.email);
-      formDataToSend.append("email", formData.email);
-      formDataToSend.append("password", formData.password);
-
-      // 🟢 HACEMOS LA PETICIÓN ULTRA-COMPATIBLE
+      const urlFinal = "https://tlmmdg-8000.csb.app/login";
+      
       const response = await fetch(urlFinal, {
         method: "POST",
         mode: "cors",
@@ -102,32 +97,50 @@ const AdminLogin = () => {
         }),
       });
 
-      const data = await response.json();
-      // 2. Manejar código 401 (Credenciales inválidas)
+      // 🚨 CONTROL DE ERRORES DEL BACKEND (401: Credenciales Incorrectas)
       if (response.status === 401) {
         const nextAttempts = attemptsLeft - 1;
         setAttemptsLeft(nextAttempts);
-        
-        // Usa el mensaje del backend si existe (ej: data.message), si no, usa el genérico
-        const backendMessage = data.message || data.error || `Credenciales inválidas. Quedan ${nextAttempts} intentos.`;
-        
-        setErrorMessage(nextAttempts <= 0 ? "Acceso bloqueado temporalmente." : backendMessage);
+
+        if (nextAttempts <= 0) {
+          setErrorMessage("Has agotado tus 3 intentos. Acceso bloqueado temporalmente.");
+        } else {
+          setErrorMessage(`Credenciales inválidas. Te quedan ${nextAttempts} intentos.`);
+        }
         return;
       }
 
-      if (!response.ok) {
-        throw new Error(data.detail || "Error en el servidor");
+      // 🚫 CONTROL DE ERRORES DEL BACKEND (403: Acceso Denegado / Rol incorrecto)
+      if (response.status === 403) {
+        try {
+          const errorData = await response.json();
+          setErrorMessage(errorData.detail || "Acceso denegado: No tienes permisos de administrador.");
+        } catch {
+          setErrorMessage("Acceso denegado: Se requieren permisos de ADMIN (Artesano).");
+        }
+        return;
       }
 
-      console.log("🏆 ¡LOGRADO! RESPUESTA DEL BACKEND:", data);
+      // Si es cualquier otro error del servidor (500, 502, etc)
+      if (!response.ok) throw new Error("Error en la respuesta del servidor");
+
+      const data = await response.json();
+      
+      // Guardar el token si tu backend lo retorna
+      if (data.access_token) {
+        localStorage.setItem("token", data.access_token);
+      }
+
       alert("¡Inicio de sesión exitoso!");
+      // Aquí puedes colocar tu redirección: window.location.href = "/admin/dashboard";
+
     } catch (error) {
-      console.error("🔴 ERROR EN LA PETICIÓN:", error.message);
-      setErrors({ auth: error.message });
+      setErrorMessage("Error de red o comunicación con el servidor. Verifica tu conexión.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
   return (
     <div className="min-h-screen flex flex-col justify-between bg-[#e5e5e5] select-none">
       {/* HEADER SUPERIOR */}
@@ -149,24 +162,14 @@ const AdminLogin = () => {
       </header>
 
       {/* ÁREA CENTRAL */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6 w-full">
+      <main className="login-card flex-1 flex flex-col items-center justify-center p-6 w-full">
         <h1 className="text-3xl font-normal text-gray-900 mb-6 tracking-tight">
           Inicio de Sesión
         </h1>
 
         {/* CARD CONTENEDORA */}
-        <div
-          className="login-card w-full max-w-[460px] mx-auto box-border"
-          style={{ minWidth: "320px" }}
-        >
+        <div className="w-full max-w-[460px] mx-auto box-border" style={{ minWidth: "320px" }}>
           <img src="/logo(3).webp" alt="C3" className="mx-auto mb-4" />
-
-          {/* Muestra errores de conexión generales del backend */}
-          {errors.auth && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4 text-sm text-center font-medium">
-              ❌ {errors.auth}
-            </div>
-          )}
 
           <form
             onSubmit={handleSubmit}
@@ -188,20 +191,19 @@ const AdminLogin = () => {
                   type="text"
                   name="email"
                   placeholder="ejemplo@gmail.com"
+                  disabled={attemptsLeft <= 0 || isSubmitting}
                   value={formData.email}
                   onChange={handleChange}
                   onFocus={() => setFocusedField("email")}
                   onBlur={() => setFocusedField("")}
-                  className={`login-input ${
-                    shakeField.email ? "animate-shake" : ""
-                  }`}
+                  className={`login-input ${shakeField.email ? "animate-shake" : ""}`}
                   style={{
                     width: "100%",
                     height: "42px",
                     padding: "0 16px",
                     boxSizing: "border-box",
                     borderColor: errors.email ? "#dc2626" : "#cccccc",
-                    backgroundColor: errors.email ? "#fef2f2" : "#e5e5e5",
+                    backgroundColor: errors.email ? "#fef2f2" : (attemptsLeft <= 0 ? "#f3f4f6" : "#e5e5e5"),
                     borderWidth: "1px",
                     borderStyle: "solid",
                     display: "block",
@@ -214,13 +216,12 @@ const AdminLogin = () => {
                   </div>
                 )}
                 {errors.email && (
-                  <p className="text-red-600 text-xs font-medium mt-1.5">
-                    {errors.email}
-                  </p>
+                  <p className="text-red-600 text-xs font-medium mt-1.5">{errors.email}</p>
                 )}
               </div>
             </div>
 
+            {/* INPUT: CONTRASEÑA */}
             {/* INPUT: CONTRASEÑA */}
             <div className="flex flex-col md:flex-row md:items-start gap-3 w-full">
               <label className="w-full md:w-[30%] text-sm font-bold text-gray-800 md:text-right pt-2.5 flex-none">
@@ -268,8 +269,7 @@ const AdminLogin = () => {
                       outline: "none",
                     }}
                   />
-
-                  <button
+                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="outline-none focus:outline-none cursor-pointer select-none flex items-center justify-center h-8 w-8 hover:bg-gray-200/50 rounded-full transition-colors"
@@ -311,72 +311,57 @@ const AdminLogin = () => {
                     )}
                   </button>
                 </div>
-
-                {/* TOOLTIP DE REQUISITOS DE SEGURIDAD */}
+                {/* TOOLTIP DE REQUISITOS */}
                 {focusedField === "password" && !errors.password && (
                   <div className="absolute z-20 w-full mt-2 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl opacity-98 border border-gray-700 font-sans leading-relaxed">
-                    <p className="font-bold border-b border-gray-700 pb-1 mb-1.5 text-amber-400">
-                      🔒 Requisitos de Seguridad:
-                    </p>
-                    <p className="mb-1">
-                      • Mínimo 8 caracteres con letras y números.
-                    </p>
-                    <p className="mb-1">
-                      <span className="text-green-400 font-bold">
-                        ✔️ Acepta:
-                      </span>{" "}
-                      <code className="bg-gray-800 px-1 py-0.5 rounded text-green-300 font-mono font-bold">
-                        . , * @ # $ % & + = !
-                      </code>
-                    </p>
-                    <p>
-                      <span className="text-red-400 font-bold">
-                        ❌ Prohibidos:
-                      </span>{" "}
-                      <code className="bg-gray-800 px-1 py-0.5 rounded text-red-300 font-mono font-bold">
-                        / \ &lt; &gt; " ' ; : ( ) [ ]
-                      </code>
-                    </p>
+                    <p className="font-bold border-b border-gray-700 pb-1 mb-1.5 text-amber-400">🔒 Requisitos de Seguridad:</p>
+                    <p className="mb-1">• Mínimo 8 caracteres con letras y números.</p>
+                    <p className="mb-1"><span className="text-green-400 font-bold">✔️ Acepta:</span> <code className="bg-gray-800 px-1 py-0.5 rounded text-green-300 font-mono font-bold">. , * @ # $ % & + = !</code></p>
+                    <p><span className="text-red-400 font-bold">❌ Prohibidos:</span> <code className="bg-gray-800 px-1 py-0.5 rounded text-red-300 font-mono font-bold">/ \ &lt; &gt; " ' ; : ( ) [ ]</code></p>
                   </div>
                 )}
                 {errors.password && (
-                  <p className="text-red-600 text-xs font-medium mt-1.5">
-                    {errors.password}
-                  </p>
+                  <p className="text-red-600 text-xs font-medium mt-1.5">{errors.password}</p>
                 )}
               </div>
             </div>
 
-            {/* BOTÓN INICIAR SESIÓN */}
-            <div className="pt-2 flex justify-center w-full">
-              <div className="w-full md:w-[70%]">
-                <button
+            {/* 🟢 SECCIÓN ASIMÉTRICA: MENSAJES DEL BACKEND + BOTÓN ALINEADO CON INPUTS */}
+            <div className="flex flex-col md:flex-row md:items-start gap-3 w-full mt-2">
+              {/* Espacio en blanco en desktop (30%) para mantener la alineación perfecta */}
+              <div className="hidden md:block w-[30%] flex-none"></div>
+              
+              {/* Contenedor dinámico (70%) que maneja sus propios espacios de forma inteligente */}
+              <div className="flex-1 w-full flex flex-col gap-4">
+                
+                {/* Banner de Errores Reales del Backend (401, 403, Bloqueos y Red) */}
+                {errorMessage && (
+                  <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg text-center font-medium shadow-sm transition-all animate-fade-in">
+                    <span className="block font-bold mb-0.5">⚠️ Control de Seguridad</span>
+                    {errorMessage}
+                  </div>
+                )}
+
+             {/* Botón de Iniciar Sesión */}
+             <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="btn-c3 shadow-sm active:scale-[0.99] transition-transform disabled:opacity-60 w-full"
+                  disabled={isSubmitting || attemptsLeft <= 0}
+                  className={`btn-c3 w-full h-[42px] font-semibold rounded-md shadow-sm transition-all active:scale-[0.99] text-white pt-2 flex  w-full
+                    ${attemptsLeft <= 0 
+                      ? 'bg-gray-400 cursor-not-allowed opacity-80' 
+                      : 'bg-amber-800 hover:bg-amber-900'
+                    }`}
+                  style={{ margin: 0  }} // Rompe la rigidez del gap del form principal
                 >
-                  {isSubmitting ? "Autenticando..." : "Iniciar Sesión"}
+                  {attemptsLeft <= 0 ? "Acceso Bloqueado" : isSubmitting ? "Autenticando..." : "Iniciar Sesión"}
                 </button>
               </div>
             </div>
 
             {/* ENLACES AL PIE */}
-            <div
-              className="flex justify-center gap-8 text-xs font-normal text-gray-600 pt-1 w-full"
-              style={{ textAlign: "center" }}
-            >
-              <a
-                href="#forgot"
-                className="hover:text-black hover:underline transition-colors"
-              >
-                ¿Olvidó su contraseña?
-              </a>
-              <a
-                href="#register"
-                className="hover:text-black hover:underline transition-colors"
-              >
-                Regístrate
-              </a>
+            <div className="flex justify-center gap-8 text-xs font-normal text-gray-600 pt-1 w-full" style={{ textAlign: "center" }}>
+              <a href="#forgot" className="hover:text-black hover:underline transition-colors">¿Olvidó su contraseña?</a>
+              <a href="#register" className="hover:text-black hover:underline transition-colors">Regístrate</a>
             </div>
           </form>
         </div>
@@ -384,8 +369,7 @@ const AdminLogin = () => {
 
       {/* FOOTER */}
       <footer className="py-4 text-center text-xs text-gray-400 font-normal z-10">
-        &copy; {new Date().getFullYear()} EVOLVEX. Todos los derechos
-        reservados.
+        &copy; {new Date().getFullYear()} EVOLVEX. Todos los derechos reservados.
       </footer>
     </div>
   );
