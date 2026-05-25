@@ -96,7 +96,7 @@ const AdminLogin = () => {
           password: formData.password,
         }),
       });
-
+      const data = await response.json();
       // 🚨 CONTROL DE ERRORES DEL BACKEND (401: Credenciales Incorrectas)
       if (response.status === 401) {
         const nextAttempts = attemptsLeft - 1;
@@ -122,9 +122,9 @@ const AdminLogin = () => {
       }
 
       // Si es cualquier otro error del servidor (500, 502, etc)
-      if (!response.ok) throw new Error("Error en la respuesta del servidor");
-
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error("Error en la respuesta del servidor");
+      }
       
       // Guardar el token si tu backend lo retorna
       if (data.access_token) {
