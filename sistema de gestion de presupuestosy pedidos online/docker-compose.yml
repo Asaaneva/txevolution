@@ -1,22 +1,21 @@
-version: '3.8'
-
 services:
   backend:
     build:
-      context: "./sistema de gestion/backend"
+      context: "./backend"
     ports:
       - "8000:8000"
-    # 🔐 Docker busca el archivo .env dentro de la carpeta del backend
+    # 🔐 Al estar ya dentro de la carpeta, la ruta al .env es directa:
     env_file:
-      - "./sistema de gestion/backend/.env"
+      - "./backend/.env"
     environment:
       - PYTHONUNBUFFERED=1
 
   frontend:
     build:
-      context: "./sistema de gestion/frontend"
+      context: "./frontend"
     ports:
       - "5173:5173"
     volumes:
-      - "./sistema de gestion/frontend:/app"
+      - "./frontend:/app"
       - "/app/node_modules"
+

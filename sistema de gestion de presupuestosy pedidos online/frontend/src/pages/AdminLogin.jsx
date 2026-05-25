@@ -77,7 +77,7 @@ const AdminLogin = () => {
     setErrors({});
 
     try {
-          ";
+          
       console.log("🚀 Enviando petición de control a:", urlFinal);
 
       // 🟢 CONSTRUIMOS UN FORM DATA (Por si FastAPI usa OAuth2 nativo)
@@ -103,6 +103,17 @@ const AdminLogin = () => {
       });
 
       const data = await response.json();
+      // 2. Manejar código 401 (Credenciales inválidas)
+      if (response.status === 401) {
+        const nextAttempts = attemptsLeft - 1;
+        setAttemptsLeft(nextAttempts);
+        
+        // Usa el mensaje del backend si existe (ej: data.message), si no, usa el genérico
+        const backendMessage = data.message || data.error || `Credenciales inválidas. Quedan ${nextAttempts} intentos.`;
+        
+        setErrorMessage(nextAttempts <= 0 ? "Acceso bloqueado temporalmente." : backendMessage);
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(data.detail || "Error en el servidor");

@@ -22,5 +22,5 @@ ENV PYTHONPATH=/app
 EXPOSE 8000
 
 # Apuntamos exactamente a la ruta interna de tu archivo main.py
-CMD ["uvicorn", "src.core.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
