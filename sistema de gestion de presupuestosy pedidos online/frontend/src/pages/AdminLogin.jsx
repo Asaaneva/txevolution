@@ -77,7 +77,7 @@ const AdminLogin = () => {
     setErrors({});
 
     try {
-      const urlFinal = "https://tlmmdg-8000.csb.app/login";
+          ";
       console.log("🚀 Enviando petición de control a:", urlFinal);
 
       // 🟢 CONSTRUIMOS UN FORM DATA (Por si FastAPI usa OAuth2 nativo)
