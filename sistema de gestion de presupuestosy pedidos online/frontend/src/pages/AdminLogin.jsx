@@ -156,15 +156,21 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-[#e5e5e5] select-none">
+    <div className=" min-h-screen flex flex-col justify-between bg-[#e5e5e5] select-none">
       {/* HEADER SUPERIOR */}
-      <header className="w-full bg-white border-b border-gray-200 px-8 py-3 flex justify-between items-center z-10">
+      <header
+        className=" main-header w-full bg-white border-b border-gray-200 px-8 py-3 flex justify-between items-center z-10"
+        style={{ width: "100%" }}
+      >
         <div className="flex items-center gap-3">
-          <span className="font-extrabold text-xl tracking-tighter text-slate-900 border-r border-gray-300 pr-4">
-            EVOLVEX
-          </span>
+          <span className="font-extrabold text-xl tracking-tighter text-slate-900 border-r border-gray-300 pr-4"></span>
           <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
-            Inicio
+            <img
+              src="/logo(3).webp"
+              alt="C3"
+              className="mx-auto mb-4"
+              style={{ width: "auto", height: "70px", margin: "0 auto" }}
+            />
           </span>
         </div>
         <div className="flex items-center gap-4">
@@ -176,17 +182,28 @@ const AdminLogin = () => {
       </header>
 
       {/* ÁREA CENTRAL */}
-      <main className="login-card flex-1 flex flex-col items-center justify-center p-6 w-full">
-        <h1 className="text-3xl font-normal text-gray-900 mb-6 tracking-tight">
+      <main
+        className=" flex-1 flex flex-col items-center justify-center p-6 w-full"
+        style={{ minHeight: "100vh", margin: "0 auto" }}
+      >
+        <h1
+          className="text-3xl font-normal text-gray-900 mb-6 tracking-tight"
+          style={{ fontSize: "2rem", textAlign: "center" }}
+        >
           Inicio de Sesión
         </h1>
 
         {/* CARD CONTENEDORA */}
         <div
-          className="w-full max-w-[460px] mx-auto box-border"
+          className=" login-card w-full max-w-[460px] mx-auto box-border"
           style={{ minWidth: "320px" }}
         >
-          <img src="/logo(3).webp" alt="C3" className="mx-auto mb-4" />
+          <img
+            src="/logo(3).webp"
+            alt="C3"
+            className="mx-auto mb-4"
+            style={{ width: "auto", height: "70px", margin: "0 auto" }}
+          />
 
           <form
             onSubmit={handleSubmit}
