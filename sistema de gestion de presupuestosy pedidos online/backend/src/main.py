@@ -1,3 +1,9 @@
+import os
+from dotenv import load_dotenv
+
+# 1. CARGAR ENTORNO: Debe ser lo primero para que 'settings' lea las llaves
+load_dotenv()
+
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from supabase import create_client, Client
@@ -6,14 +12,10 @@ from src.api.auth.router_admin import router as auth_admin
 from src.api.auth.router_client import router as auth_client
 from src.core.config import settings
 from fastapi import FastAPI, Depends
-import os
-from dotenv import load_dotenv
 
-# 1. CARGAR ENTORNO: Debe ser lo primero para que 'settings' lea las llaves
-load_dotenv()
 
 origins = [
-    "https://tlmmdg-5173.csb.app/login",
+    "https://qzt382-5173.csb.app/login",
     "https://localhost:5173",
     "*"  # El comodín permite que cualquier entorno cloud se conecte
 ]
