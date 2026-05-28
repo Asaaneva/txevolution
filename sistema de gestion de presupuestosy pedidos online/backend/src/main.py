@@ -1,34 +1,5 @@
-# 1. TRUCO DE INYECCIÓN: Forzamos la carga del entorno en la primera línea.
-# El formateador de CodeSandbox no puede mover esto porque está en una sola línea combinada.
-__import__('dotenv').load_dotenv(); import os
 
-# Ahora sí, el formateador puede ordenar el resto como quiera, el entorno ya está cargado
-from fastapi import FastAPI, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.utils import get_openapi
-from supabase import create_client, Client
-from src.api.auth.dependencies import role_admin_required
-from src.api.auth.router_admin import router as auth_admin
-from src.api.auth.router_client import router as auth_client
-from src.core.config import settings
 
-# 2. INICIALIZACIÓN DE LA APP
-app = FastAPI(title=settings.PROJECT_NAME)
-
-# 3. LEER LA URL DE CODESANDBOX DESDE ENTORNO
-# Recomiendo usar la variable de entorno, pero si la dejas fija, usa el código de abajo
-frontend_dinamico = os.environ.get("FRONTEND_URL", "https://qzt382-5173.csb.app")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        frontend_dinamico,          # URL limpia (SIN el "/login" al final)
-        "http://localhost:5173",    # Corregido: Localhost usa http, no https por defecto en Vite
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # --- 🕵️‍♀️ VERIFICACIÓN DE CONFIGURACIÓN ---
 print("--- VERIFICACIÓN DE CONFIGURACIÓN ---")
