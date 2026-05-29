@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App"; // O AdminLogin, dependiendo de cuál renderices
-import "./index.css"; // 👈 ¡ESTA LÍNEA ES CRUCIAL! Si no está, Tailwind no carga.
+import App from "./App.jsx"; // 🟢 IMPORTANTE: "App" debe declararse aquí para poder usarlo abajo
+import "./index.css"; // Tus estilos de Tailwind
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

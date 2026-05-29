@@ -1,14 +1,9 @@
 import React from "react";
-// 🟢 Cambiado el prefijo de "components" a "pages"
-import AdminLogin from "./pages/AdminLogin";
-import "./pages/AdminLogin.css";
+import AdminDashboard from "./pages/AdminDashboard"; // 🟢 SIN llaves porque es un export default
 
 function App() {
-  return (
-    <>
-      <AdminLogin />
-    </>
-  );
+  // Retornamos directamente el panel de administración
+  return <AdminDashboard />;
 }
 
 export default App;

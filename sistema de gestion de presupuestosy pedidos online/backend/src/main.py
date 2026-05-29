@@ -1,28 +1,19 @@
-__import__('dotenv').load_dotenv(); import os
-
-# Ahora sí, el formateador puede ordenar el resto como quiera, el entorno ya está cargado
-from fastapi import FastAPI, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.utils import get_openapi
-from supabase import create_client, Client
-from src.api.auth.dependencies import role_admin_required
-from src.api.auth.router_admin import router as auth_admin
-from src.api.auth.router_client import router as auth_client
+__import__('dotenv').load_dotenv();import os
 from src.core.config import settings
-
-
-origins = [
-    "https://qzt382-5173.csb.app/login",
-    "https://localhost:5173",
-    "*"  # El comodín permite que cualquier entorno cloud se conecte
-]
+from src.api.auth.router_client import router as auth_client
+from src.api.auth.router_admin import router as auth_admin
+from src.api.auth.dependencies import role_admin_required
+from supabase import create_client, Client
+from fastapi.openapi.utils import get_openapi
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Depends
 
 
 # 2. INICIALIZACIÓN DE LA APP
 app = FastAPI(title=settings.PROJECT_NAME)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -100,26 +91,4 @@ app.openapi = custom_openapi
 # 5. EJECUCIÓN
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
-
-
-app.openapi = custom_openapi
-
-# 5. EJECUCIÓN
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
-# 5. EJECUCIÓN
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
-# 5. EJECUCIÓN
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
-    import uvicorn
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
     uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
