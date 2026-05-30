@@ -9,6 +9,7 @@ import { Button } from "../components/ui/Button";
 
 export const Login = () => {
   const navigate = useNavigate(); // 👈 AGREGA ESTA LÍNEA
+
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -120,8 +121,15 @@ export const Login = () => {
 
       if (!response.ok) throw new Error("Error en la respuesta del servidor");
 
-      if (data.access_token) localStorage.setItem("token", data.access_token);
-      alert("¡Inicio de sesión exitoso!");
+      if (data.access_token)
+        // 1. Guardamos el token para las peticiones del Backend
+        localStorage.setItem("token", data.access_token);
+
+      // 2. Guardamos la bandera de autenticación para que tu Ruta Protegida (Guard) te deje pasar
+      localStorage.setItem("isAuthenticated", "true");
+
+      // 3. Redirigimos de inmediato al Dashboard
+      navigate("/dashboard");
     } catch (error) {
       setErrorMessage(
         "Error de red o comunicación con el servidor. Verifica tu conexión."
