@@ -1,9 +1,9 @@
+// src/App.jsx
 import React from "react";
-import AdminDashboard from "./pages/AdminDashboard"; // 🟢 SIN llaves porque es un export default
+import AppRoutes from "./routes";
 
 function App() {
-  // Retornamos directamente el panel de administración
-  return <AdminDashboard />;
+  return <AppRoutes />;
 }
 
 export default App;

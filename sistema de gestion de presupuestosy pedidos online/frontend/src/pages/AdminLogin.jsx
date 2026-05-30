@@ -1,4 +1,6 @@
+// src/pages/public/Login.jsx
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { Card } from "../components/ui/Card";
@@ -6,6 +8,7 @@ import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 
 export const Login = () => {
+  const navigate = useNavigate(); // 👈 AGREGA ESTA LÍNEA
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -51,7 +54,7 @@ export const Login = () => {
       triggerShake("password");
     } else if (formData.password.length < 8) {
       newErrors.password =
-        "Contraseña insecure. Debe contener mínimo 8 caracteres.";
+        "Contraseña insegura. Debe contener mínimo 8 caracteres.";
       triggerShake("password");
     } else if (!passwordRegex.test(formData.password)) {
       newErrors.password =
@@ -129,11 +132,9 @@ export const Login = () => {
   };
 
   return (
-    /* 1. Mantenemos intacto tu contenedor Grid base */
     <div className="app-grid-container select-none">
       <Header />
 
-      {/* 2. Mantenemos tu clase de contenido nativa */}
       <main className="main-content">
         <h1
           className="font-normal text-gray-900 mb-6 tracking-tight text-center"
@@ -142,11 +143,8 @@ export const Login = () => {
           Inicio de Sesión
         </h1>
 
-        {/* 🛡️ CASCO ANTIDISTORSIÓN FIJO:
-            Esto limita el ancho de la tarjeta al llegar a escritorio sin romper el flujo Grid */}
         <div className="w-full max-w-md mx-auto px-4 box-border">
           <Card>
-            {/* Contenedor interno para asegurar la alineación limpia de los componentes */}
             <div className="flex flex-col items-center w-full p-2">
               <img
                 src="/logo(3).webp"
@@ -158,7 +156,7 @@ export const Login = () => {
                 onSubmit={handleSubmit}
                 className="w-full flex flex-col gap-6"
               >
-                {/* INPUT DE CORREO */}
+                {/* INPUT DE CORREO MODULARIZADO */}
                 <Input
                   label="Correo"
                   type="text"
@@ -175,10 +173,9 @@ export const Login = () => {
                   helperText="💡 Introduzca su correo electrónico registrado."
                 />
 
-                {/* INPUT DE CONTRASEÑA */}
+                {/* INPUT DE CONTRASEÑA MODULARIZADO */}
                 <Input
                   label="Contraseña"
-                  isPassword={true}
                   type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Contraseña"
@@ -220,7 +217,7 @@ export const Login = () => {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="text-slate-400 hover:text-slate-600 transition-colors pr-2"
+                      className="text-slate-400 hover:text-slate-600 transition-colors pr-2 outline-none"
                     >
                       {showPassword ? (
                         <svg
@@ -250,10 +247,10 @@ export const Login = () => {
                   )}
                 />
 
-                {/* BOTÓN Y ALERTAS */}
+                {/* ALERTAS Y BOTÓN MODULAR */}
                 <div className="flex flex-col gap-4 w-full mt-2">
                   {errorMessage && (
-                    <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg text-center font-medium shadow-sm">
+                    <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg text-center font-medium shadow-sm animate-fade-in">
                       <span className="block font-bold mb-0.5">
                         ⚠️ Control de Seguridad
                       </span>
@@ -264,7 +261,6 @@ export const Login = () => {
                   <Button
                     type="submit"
                     disabled={isSubmitting || attemptsLeft <= 0}
-                    className="w-full"
                   >
                     {attemptsLeft <= 0
                       ? "Acceso Bloqueado"
@@ -280,7 +276,7 @@ export const Login = () => {
                     href="#forgot"
                     className="hover:text-slate-900 hover:underline transition-colors"
                   >
-                    ¿Olvidó su contraseña?
+                    ¿Olvió su contraseña?
                   </a>
                   <a
                     href="#register"
@@ -299,3 +295,5 @@ export const Login = () => {
     </div>
   );
 };
+
+export default Login;
