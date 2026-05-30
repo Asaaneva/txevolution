@@ -1,17 +1,18 @@
+// src/components/ProtectedRoute.jsx
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 
-const ProtectedRoute = ({ children }) => {
-  // Verificamos si existe el token de autenticación en el navegador
+export const ProtectedRoute = () => {
+  // Verificamos si el usuario realmente pasó por el Login exitosamente
   const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
 
   if (!isAuthenticated) {
-    // Si no está autenticado, lo redirige al login de inmediato
-    return <Navigate to="/" replace />;
+    // 🚷 Si no está autenticado, lo redirige al login reemplazando el historial
+    return <Navigate to="/login" replace />;
   }
 
-  // Si está autenticado, renderiza el componente hijo (el Dashboard)
-  return children;
+  // 🔓 Si está autenticado, renderiza las pantallas internas (Dashboard, Ventas, etc.)
+  return <Outlet />;
 };
 
 export default ProtectedRoute;
