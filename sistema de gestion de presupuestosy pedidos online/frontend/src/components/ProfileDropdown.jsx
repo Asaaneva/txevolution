@@ -7,19 +7,27 @@ export const ProfileDropdown = () => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // Recuperamos el nombre real guardado en el Login
   const userName = localStorage.getItem("userName") || "Vanessa Rodriguez";
   const userInitials = userName.substring(0, 2).toUpperCase();
 
-  // 🚪 Lógica implacable de Cierre de Sesión
-  const handleLogout = () => {
+  // 🚪 Lógica de Cierre de Sesión Blindada
+  const handleLogout = (e) => {
+    // Detenemos cualquier evento que intente cerrar el menú antes de tiempo
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Limpieza absoluta del almacenamiento
     localStorage.removeItem("token");
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("userName");
-    navigate("/login"); // Redirección instantánea al Login pública
+
+    setIsOpen(false);
+
+    // Redirección quirúrgica al Login
+    navigate("/login");
   };
 
-  // 🛡️ Efecto para cerrar el menú si el usuario hace clic afuera de él
+  // 🛡️ Manejador de clics externos refinado
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -32,10 +40,10 @@ export const ProfileDropdown = () => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Botón del Avatar Interactivable */}
+      {/* Botón del Avatar */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 focus:outline-none group select-none"
+        className="flex items-center gap-2 focus:outline-none group select-none cursor-pointer"
         aria-expanded={isOpen}
       >
         <div
@@ -50,11 +58,11 @@ export const ProfileDropdown = () => {
         </div>
       </button>
 
-      {/* 🗺️ Menú Desplegable Flotante */}
+      {/* Menú Desplegable */}
       {isOpen && (
         <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl border border-slate-200/80 shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-1 duration-200">
-          {/* Encabezado del Menú (Información del Usuario) */}
-          <div className="px-4 py-2.5 border-b border-slate-100">
+          {/* Info del Usuario */}
+          <div className="px-4 py-2.5 border-b border-slate-100 select-none">
             <p className="text-xs font-bold text-slate-800 truncate">
               {userName}
             </p>
@@ -63,33 +71,36 @@ export const ProfileDropdown = () => {
             </p>
           </div>
 
-          {/* Opciones del Menú */}
+          {/* Opciones */}
           <div className="p-1 flex flex-col gap-0.5">
             <button
+              type="button"
               onClick={() => {
                 setIsOpen(false);
                 alert("Ir a mi perfil...");
               }}
-              className="w-full text-left px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors flex items-center gap-2"
+              className="w-full text-left px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
             >
               👤 Mi Perfil
             </button>
             <button
+              type="button"
               onClick={() => {
                 setIsOpen(false);
                 alert("Ir a configuración...");
               }}
-              className="w-full text-left px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors flex items-center gap-2"
+              className="w-full text-left px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
             >
               ⚙️ Configuración
             </button>
           </div>
 
-          {/* Botón de Salida Destacado */}
+          {/* Botón de Salida con detención de propagación */}
           <div className="p-1 border-t border-slate-100 mt-1">
             <button
+              type="button"
               onClick={handleLogout}
-              className="w-full text-left px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors flex items-center gap-2"
+              className="w-full text-left px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
             >
               🚪 Cerrar Sesión
             </button>
