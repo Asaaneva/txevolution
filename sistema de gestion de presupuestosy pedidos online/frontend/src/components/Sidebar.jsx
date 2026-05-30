@@ -14,10 +14,13 @@ export const Sidebar = ({ isOpen, setIsOpen }) => {
       {/* Contenido del Sidebar */}
       <div className="p-6 flex flex-col h-full w-64">
         <div className="flex items-center justify-between mb-8">
-          <span className="text-lg font-bold tracking-wider text-white">
-            Calzados y TapiceriaC3
-          </span>
-          {/* Botón para cerrar solo visible en móviles */}
+          <img
+            src="/logo(3).webp"
+            className="logo mb-6 w-16 h-16 object-contain"
+            alt="Logo"
+          />
+
+          {/* para cerrar solo visible en móviles */}
           <button
             onClick={() => setIsOpen(false)}
             className="md:hidden text-slate-400 hover:text-white"
@@ -97,17 +100,6 @@ export const Sidebar = ({ isOpen, setIsOpen }) => {
             href="#"
             className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              fill="currentColor"
-              class="bi bi-briefcase-fill"
-              viewBox="0 0 16 16"
-            >
-              <path d="M6.5 1A1.5 1.5 0 0 0 5 2.5V3H1.5A1.5 1.5 0 0 0 0 4.5v1.384l7.614 2.03a1.5 1.5 0 0 0 .772 0L16 5.884V4.5A1.5 1.5 0 0 0 14.5 3H11v-.5A1.5 1.5 0 0 0 9.5 1zm0 1h3a.5.5 0 0 1 .5.5V3H6v-.5a.5.5 0 0 1 .5-.5" />
-              <path d="M0 12.5A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5V6.85L8.129 8.947a.5.5 0 0 1-.258 0L0 6.85z" />
-            </svg>{" "}
             Motor Presupuesto
           </a>
           <a
