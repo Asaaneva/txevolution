@@ -3,7 +3,7 @@ import React from "react";
 export const Sidebar = ({ isOpen, setIsOpen }) => {
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 bg-slate-950 text-white transform transition-all duration-300 ease-in-out 
+      className={`fixed inset-y-0 left-0 z-50 bg-black text-white transform transition-all duration-300 ease-in-out 
         md:sticky md:top-0 md:h-screen
         ${
           isOpen

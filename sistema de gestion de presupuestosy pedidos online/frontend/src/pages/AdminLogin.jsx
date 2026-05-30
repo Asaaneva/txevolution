@@ -121,13 +121,11 @@ export const Login = () => {
 
       if (!response.ok) throw new Error("Error en la respuesta del servidor");
 
-      if (data.access_token)
-        // 1. Guardamos el token para las peticiones del Backend
-        localStorage.setItem("token", data.access_token);
-
-      // 2. Guardamos la bandera de autenticación para que tu Ruta Protegida (Guard) te deje pasar
+      if (data.access_token) localStorage.setItem("token", data.access_token);
       localStorage.setItem("isAuthenticated", "true");
 
+      // Guardamos el nombre del usuario para mostrarlo en el Dashboard
+      localStorage.setItem("userName", data.user_name || "Administrador");
       // 3. Redirigimos de inmediato al Dashboard
       navigate("/dashboard");
     } catch (error) {
