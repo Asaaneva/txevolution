@@ -1,4 +1,5 @@
 import React from "react";
+import ProfileDropdown from "./ProfileDropdown";
 
 export const Topbar = ({ user, toggleSidebar }) => {
   const userName = localStorage.getItem("userName") || "Usuario";
@@ -20,18 +21,11 @@ export const Topbar = ({ user, toggleSidebar }) => {
       </div>
 
       {/* Bloque del perfil del usuario (Derecha) */}
-      {/* Visualización del Perfil en la esquina derecha */}
-      <div className="flex items-center gap-3">
-        <div className="text-right">
-          <p className="text-xs font-bold text-slate-800">{userName}</p>
-          <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">
-            Admin
-          </p>
-        </div>
-        {/* Avatar Geométrico */}
-        <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold uppercase">
-          {userName.substring(0, 2)}
-        </div>
+      <div className="flex items-center gap-4">
+        {/* Aquí puedes meter notificaciones más adelante si deseas */}
+
+        {/* 👈 Inyectamos el dropdown modular e interactivo */}
+        <ProfileDropdown />
       </div>
     </header>
   );
