@@ -10,7 +10,8 @@ export default defineConfig({
     // 🔓 Esto le dice a Vite que permita conexiones desde CodeSandbox
     allowedHosts: [
       "qzt382-5173.csb.app",
-      ".csb.app", // Permite cualquier subdominio de CodeSandbox por comodidad
+      ".csb.app",
+       // Permite cualquier subdominio de CodeSandbox por comodidad
     ],
   },
 });
