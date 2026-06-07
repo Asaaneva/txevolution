@@ -3,16 +3,18 @@ import React from "react";
 
 export const Header = () => {
   return (
-    <header className="w-full bg-white/70 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-50 px-6 py-4 transition-all duration-300">
-      <div className="max-w-[1400px] mx-auto flex items-center justify-between w-full">
-        {/* Isotipo de la Marca */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-slate-950 flex items-center justify-center text-white font-black text-sm tracking-wider select-none shadow-sm">
-            TX
-          </div>
-          <span className="text-sm font-bold text-slate-900 tracking-tight select-none">
-            TXevolution
-          </span>
+      <header
+        className="w-full bg-[linear-gradient(109deg,rgba(255,255,255,0.7),rgba(60,18,16,0.7),rgba(88,23,23,0.7))] backdrop-blur-md top-0 z-50 px-6 py-4 transition-all duration-300 border-b border-red-500/80 shadow-[0_4px_20px_rgba(239,68,68,0.4)] "
+        
+      >
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between w-full">
+          <div className="flex items-center gap-2.5">
+
+          <img
+                src="/logo(3).webp"
+                className="logo mb-6 w-16 h-12 object-contain"
+                alt="Logo"
+              />
         </div>
 
         {/* Indicador sutil de Estado de Red / Entorno */}

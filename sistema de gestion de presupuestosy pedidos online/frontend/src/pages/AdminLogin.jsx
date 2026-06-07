@@ -141,30 +141,27 @@ export const Login = () => {
     <div className="app-grid-container select-none">
       <Header />
 
-      <main className="main-content">
-        <h1
-          className="font-normal text-gray-900 mb-6 tracking-tight text-center"
-          style={{ fontSize: "var(--font-size-titulo)" }}
-        >
-          Inicio de Sesión
-        </h1>
+      <main className="main-content " >
+        
 
-        <div className="w-full max-w-md mx-auto px-4 box-border">
+        <div className="w-full max-w-[560px] mx-auto px-4 box-border">
           <Card>
-            <div className="flex flex-col items-center w-full p-2">
-              <img
-                src="/logo(3).webp"
-                className="logo mb-6 w-16 h-16 object-contain"
-                alt="Logo"
-              />
+            <div className="flex flex-col items-start w-full p-2">
+              <h1
+                className="font-base  text-stone-700 mb-5"
+                style={{ fontSize: "var(--font-size-titulo)", fontFamily: "Sans,Arial,sans-serif", fontWeight: "400" }}
+              >
+                Acceso Administrativo
+              </h1>
+              
 
               <form
                 onSubmit={handleSubmit}
-                className="w-full flex flex-col gap-6"
+                className="w-full flex flex-col gap-4 font-normal"
               >
                 {/* INPUT DE CORREO MODULARIZADO */}
                 <Input
-                  label="Correo"
+                  label="Correo electrónico"
                   type="text"
                   name="email"
                   placeholder="ejemplo@gmail.com"
@@ -176,7 +173,7 @@ export const Login = () => {
                   error={errors.email}
                   shake={shakeField.email}
                   isFocused={focusedField === "email"}
-                  helperText="💡 Introduzca su correo electrónico registrado."
+                  helperText=""
                 />
 
                 {/* INPUT DE CONTRASEÑA MODULARIZADO */}
@@ -194,15 +191,15 @@ export const Login = () => {
                   shake={shakeField.password}
                   isFocused={focusedField === "password"}
                   helperText={
-                    <div className="text-[11px] leading-relaxed text-slate-500 text-left">
-                      <p className="font-bold border-b border-gray-200 pb-1 mb-1.5 text-amber-600">
+                    <div className="text-[16px] leading-relaxed text-slate-500 text-left">
+                      <p className="font-weight-500 border-b border-gray-200 pb-1 mb-1.5 text-amber-600">
                         🔒 Requisitos de Seguridad:
                       </p>
                       <p className="mb-1">
                         • Mínimo 8 caracteres con letras y números.
                       </p>
                       <p className="mb-1">
-                        <span className="text-green-600 font-bold">
+                        <span className="text-green-600 font-weight-600">
                           ✔️ Acepta:
                         </span>{" "}
                         <code className="bg-slate-100 px-1 py-0.5 rounded text-green-700 font-mono font-bold">

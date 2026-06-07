@@ -1,116 +1,113 @@
 import React from "react";
+import { Link, useLocation } from "react-router-dom";
 
 export const Sidebar = ({ isOpen, setIsOpen }) => {
-  return (
-    <aside
-      className={`fixed inset-y-0 left-0 z-50 bg-black text-white transform transition-all duration-300 ease-in-out 
-        md:sticky md:top-0 md:h-screen
-        ${
-          isOpen
-            ? "w-64 translate-x-0"
-            : "-translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden"
-        }`}
-    >
-      {/* Contenido del Sidebar */}
-      <div className="p-6 flex flex-col h-full w-64">
-        <div className="flex items-center justify-between mb-8">
-          <img
-            src="/logo(3).webp"
-            className="logo mb-6 w-16 h-16 object-contain"
-            alt="Logo"
-          />
+  const location = useLocation();
 
-          {/* para cerrar solo visible en móviles */}
-          <button
-            onClick={() => setIsOpen(false)}
-            className="md:hidden text-slate-400 hover:text-white"
-          >
-            ✕
-          </button>
+  const isActive = (path) => location.pathname === path;
+
+  // 🎨 Tu degradado y tipografía corporativa exactos
+  const customSidebarStyle = {
+    fontFamily: '"Google Sans", roboto, "Noto Sans Myanmar UI", "Noto Sans Khmer", arial, sans-serif',
+    background: 'rgb(255, 254, 254)',
+    borderRight: '1px solid rgba(0, 0, 0, 0.12)',
+    
+  };
+
+  return (
+    <>
+      {/* 🌫️ Fondo oscuro para móviles (Cierra el menú al hacer clic fuera) */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-40 md:hidden transition-opacity duration-300"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* 📊 Contenedor Principal del Sidebar */}
+      <aside 
+        style={customSidebarStyle}
+        className={`fixed top-0 bottom-0 left-0 w-64 p-4 flex flex-col justify-between z-50 transition-transform duration-300 ease-in-out  h-screen ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex flex-col gap-1">
+          
+          {/* Encabezado: Marca + Botón de Cierre con HOVER SUAVE */}
+          <div className=" mb-6 flex items-center justify-between  pb-5"style={{borderBottom:"1px solid rgba(125, 10, 10, 0.2)"}} >
+            <div className="flex items-center gap-2">
+     
+                <img
+                      src="/logo(3).webp"
+                      className="logo mb-6 w-3 h-5 object-contain"
+                      style={{height:"50px"}}
+                      alt="Logo"
+                    />
+            </div>
+            
+            {/* ✕ BOTÓN DE CIERRE UNIVERSAL REFACTORIZADO */}
+            <button 
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation(); // Evita que el evento altere otras capas
+                setIsOpen(false);   // 👈 Tu función exacta solicitada
+              }}
+
+              title="Cerrar menú"
+              className="w-9 h-9 flex items-center justify-center text-red-950 text-normal hover:text-red-600 hover:bg-red-50 rounded-xl text-sm font-bold cursor-pointer transition-all duration-300 ease-in-out hover:scale-110 active:scale-95"
+              style={{
+                border: "1px solid rgba(148, 8, 8, 0.37)",
+                backgroundColor: "rgba(255, 255, 255, 0.63)",
+                fontSize: "18px",
+                fontWeight: "600",
+                color: "rgb(70, 15, 15)"
+              }}
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Menú de Opciones */}
+          <nav className="space-y-1 flex flex-col gap-3">
+            <Link
+              to="/dashboard"
+              onClick={() => window.innerWidth < 768 && setIsOpen(false)} 
+              className={`px-4 py-2.5 rounded-xl text-xs   transition-all duration-200 flex items-center gap-2.5 cursor-pointer ${
+                isActive("/dashboard")
+                  ? "bg-[#642121] border border-red-500 text-white  backdrop-blur-md shadow-xs border border-red-800/80"
+                  : "text-stone-700 hover:text-white hover:bg-white/10"
+              }`}style={{fontFamily:"Sans,Arial,sans-serif", fontWeight:"400", fontSize:"16px"}}
+              
+            >
+              <span className="text-sm" >📊</span> 
+              <span >Panel Principal</span>
+            </Link>
+
+            <Link
+              to="/portfolio"
+              onClick={() => window.innerWidth < 768 && setIsOpen(false)} 
+              className={`px-4 py-2.5 rounded-xl text-xs font-normal transition-all duration-200 flex items-center gap-2.5 cursor-pointer ${
+                isActive("/portfolio")
+                  ? "bg-[#642121] text-white backdrop-blur-md shadow-xs border border-white/10"
+                  : "text-stone-700  hover:text-white hover:bg-white/10"
+              }`}style={{fontFamily:"Sans,Arial,sans-serif", fontWeight:"400", fontSize:"16px"}}
+            >
+              <span className="text-sm">💼</span> 
+              <span>Cargar Portafolio</span>
+            </Link>
+          </nav>
         </div>
 
-        <nav className="flex flex-col gap-2 flex-1">
-          <a
-            href="#"
-            className="px-4 py-2.5 rounded-xl bg-slate-900 text-sm font-medium text-white"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              fill="white"
-              class="bi bi-house"
-              viewBox="0 0 16 16"
-            >
-              <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z" />
-            </svg>
-            Inicio
-          </a>
-          <a
-            href="#"
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              fill="yellow"
-              class="bi bi-bell-fill"
-              viewBox="0 0 16 16"
-            >
-              <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2m.995-14.901a1 1 0 1 0-1.99 0A5 5 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901" />
-            </svg>
-            Notificaciones
-          </a>
-          <a
-            href="#"
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              fill="currentColor"
-              class="bi bi-briefcase-fill"
-              viewBox="0 0 16 16"
-            >
-              <path d="M6.5 1A1.5 1.5 0 0 0 5 2.5V3H1.5A1.5 1.5 0 0 0 0 4.5v1.384l7.614 2.03a1.5 1.5 0 0 0 .772 0L16 5.884V4.5A1.5 1.5 0 0 0 14.5 3H11v-.5A1.5 1.5 0 0 0 9.5 1zm0 1h3a.5.5 0 0 1 .5.5V3H6v-.5a.5.5 0 0 1 .5-.5" />
-              <path d="M0 12.5A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5V6.85L8.129 8.947a.5.5 0 0 1-.258 0L0 6.85z" />
-            </svg>{" "}
-            Cargar portafolio
-          </a>
-          <a
-            href="#"
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              fill="white"
-              class="bi bi-calculator"
-              viewBox="0 0 16 16"
-            >
-              <path d="M12 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z" />
-              <path d="M4 2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5zm0 4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z" />
-            </svg>
-            Gestión de Costos
-          </a>
-          <a
-            href="#"
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all"
-          >
-            Motor Presupuesto
-          </a>
-          <a
-            href="#"
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all"
-          >
-            Gestión de Pagos
-          </a>
-        </nav>
-      </div>
-    </aside>
+        {/* Pie del Sidebar */}
+        <div className="p-3 bg-black/20 border border-white/5 rounded-xl flex items-center justify-between backdrop-blur-xs">
+          <div className="flex flex-col">
+            <span className="text-[9px] text-slate-400 uppercase tracking-wider font-black">Nivel de Acceso</span>
+            <span className="text-xs font-semibold text-white/90">Administrador</span>
+          </div>
+          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        </div>
+      </aside>
+    </>
   );
 };
 

@@ -32,7 +32,7 @@ export const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/60 flex font-sans antialiased text-slate-800 relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#f4f4f4] flex font-sans antialiased text-slate-800 relative overflow-x-hidden">
       {/* 1. Fondo oscuro/Backdrop para cerrar el menú en móviles */}
       {isSidebarOpen && (
         <div
