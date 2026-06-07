@@ -9,11 +9,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Depends
 
 
+
 # 2. INICIALIZACIÓN DE LA APP
 app = FastAPI(title=settings.PROJECT_NAME)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://verbose-dollop-5gx6q7rqg7x5h797-5173.app.github.dev",
+                   "https://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

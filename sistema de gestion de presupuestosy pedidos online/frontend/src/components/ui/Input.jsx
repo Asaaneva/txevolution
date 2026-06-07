@@ -29,22 +29,22 @@ export const Input = ({
       )}
 
       {label && (
-        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider text-left">
+        <label className="text-[16px] font-semibold text-stone-800 text-[16px]  tracking-wider m-b m-1 "style={{fontFamily:"Sans,Arial,sans-serif", fontWeight:"520", fontSize:"16px"}}>
           {label}
         </label>
       )}
 
-      <div className="relative w-full flex items-center">
+      <div className="relative w-full flex items-center gap-2">
         <input
-          className={`w-full px-4 py-3 rounded-xl border bg-slate-50/30 text-sm placeholder-slate-400 transition-all duration-200 outline-none
-            ${renderRightAction ? "pr-10" : "pr-4"}
+          className={`w-full px-3 py-2.5 rounded-lg border border-[#642121]/20 bg-[#642121]/20 placeholder-stone-600 transition-all duration-200 outline-none font-sans-serif text-[14px] font-normal
+            ${renderRightAction ? "pr-8" : "pr-4"}
             ${error 
-              ? "border-rose-400 bg-rose-50/10 text-rose-900 focus:ring-2 focus:ring-rose-500" 
-              : isFocused 
-                ? "border-slate-950 ring-2 ring-slate-950 bg-white" 
-                : "border-slate-200 focus:border-slate-950 focus:bg-white"
+                ? "border-rose-400 bg-rose-50/10 text-rose-900 focus:ring-1 focus:ring-rose-500" 
+                : isFocused 
+                  ? "border-[#642121]/20 ring ring-[#642121]/10 bg-[#642121]/20 text-stone-800" 
+                  : "border-[#642121]/20 - bg-white text-stone-500 focus:border-[#642121]/10 focus:ring-1 focus:ring-[#642121] focus:bg-[#642121]/10 focus:text-stone-950"
             } ${className}`}
-          {...props}
+        {...props}
         />
 
         {renderRightAction && (
@@ -55,15 +55,15 @@ export const Input = ({
       </div>
 
       {error && (
-        <span className="text-[11px] text-rose-600 font-semibold mt-0.5 text-left flex items-center gap-1">
+        <span className="text-[11px] text-rose-600 font-semibold mt-0.5 text-left flex items-center gap-1 font-sans">
           ⚠️ {error}
         </span>
       )}
 
       {!error && helperText && (
-        <div className="mt-0.5 w-full text-left">
+        <div className="mt-1 w-full text-left font-sans">
           {typeof helperText === "string" ? (
-            <span className="text-[11px] text-slate-400 font-medium">{helperText}</span>
+            <span className="text-[11px] font-medium text-stone-400 leading-relaxed">{helperText}</span>
           ) : (
             helperText
           )}

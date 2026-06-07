@@ -1,24 +1,21 @@
 /* src/index.css */
 @import "tailwindcss";
-/* src/index.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 /* --- VARIABLES DE MARCA --- */
 :root {
   --color-cafe-c3: #3a250f;
   --color-cafe-hover: #543313;
   /* Ejemplo de uso de clamp para tipografía fluida y adaptable */
-  --font-size-titulo: clamp(1.75rem, 4vw, 2.25rem);
+  --font-size-titulo: clamp(2rem, 2vw, 2.25rem);
+  
 }
 
 /* --- ESTRUCTURA DEFENSIVA COMPLETA (Grid Layout) --- */
 body {
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #e5e5e5;
-  color: #090909;
+  background-color: #fbfbfb;
+  color: rgb(68, 68, 68);
 }
 
 /* Esqueleto principal de la app */
@@ -38,7 +35,8 @@ body {
   width: 100%;
   background-color: #ffffff;
   border-bottom: 1px solid #e5e7eb;
-  padding: 12px 24px;
+  padding:14px 24px
+  ;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -51,7 +49,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 10px 0px;
   box-sizing: border-box;
 }
 
@@ -63,6 +61,8 @@ body {
   color: #9ca3af;
   font-weight: 400;
   z-index: 10;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+
 }
 
 /* --- ANIMACIONES --- */
@@ -227,9 +227,9 @@ body {
 }
 
 .ui-card {
-  background: #ffffff;
+  background: #f4f4f4;
   border-radius: 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
   padding: 28px;
   width: 100%;
@@ -250,7 +250,7 @@ body {
   font-weight: 500;
   font-size: 14px;
   border: none;
-  background-color: #0f172a;
+  background-color: #ffffff;
   color: #ffffff;
   cursor: pointer;
   transition: all 0.2s ease;
