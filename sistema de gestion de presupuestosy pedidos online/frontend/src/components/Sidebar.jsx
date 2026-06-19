@@ -1,114 +1,180 @@
 import React from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 
 export const Sidebar = ({ isOpen, setIsOpen }) => {
+  const navigate = useNavigate();
+
+  // Control de cierre de sesión seguro
+  const handleLogout = () => {
+    if (window.confirm("¿Estás segura de que deseas salir del sistema?")) {
+      localStorage.removeItem("isAuthenticated");
+      navigate("/");
+    }
+  };
+
+  // 🎨 Estilos dinámicos usando NavLink (mantiene el diseño exacto de Tailwind UI)
+  const obtenerEstiloEnlace = ({ isActive }) => `
+    group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all
+    ${
+      isActive
+        ? "bg-gray-800 text-white font-semibold"
+        : "text-gray-400 hover:bg-gray-800/40 hover:text-white"
+    }
+  `;
+
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 bg-black text-white transform transition-all duration-300 ease-in-out 
-        md:sticky md:top-0 md:h-screen
-        ${
-          isOpen
-            ? "w-64 translate-x-0"
-            : "-translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden"
-        }`}
+      className={`
+        bg-[linear-gradient(150deg,rgb(255,255,255),#662828,rgb(100,7,3),rgba(43,3,3,0.9))] fixed inset-y-0 left-0 z-50 
+        flex w-64 flex-col justify-between h-screen 
+        text-white border-r border-gray-800/60
+        overflow-y-auto transition-transform duration-300 ease-in-out
+        ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+      `}
+      style={{
+        background:
+          "linear-gradient(150deg, rgb(255, 255, 255), #662828, rgb(100, 7, 3), rgba(43, 3, 3, 0.9))",
+      }}
     >
-      {/* Contenido del Sidebar */}
-      <div className="p-6 flex flex-col h-full w-64">
-        <div className="flex items-center justify-between mb-8">
-          <img
-            src="/logo(3).webp"
-            className="logo mb-6 w-16 h-16 object-contain"
-            alt="Logo"
-          />
+      {/* 🔝 SECCIÓN SUPERIOR: LOGO Y NAVEGACIÓN PRINCIPAL */}
+      <div className="flex flex-col flex-1 px-4 py-6">
+        {/* Cabecera de Marca */}
+        <div className="flex items-center justify-between mb-7 px-2">
+          <div className="flex items-center gap-2.5">
+            {/* Isotipo geométrico minimalista */}
+            <svg
+              className="h-7 w-auto text-indigo-500"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+            <span className="text-sm font-bold tracking-wider uppercase font-sans text-gray-100">
+              TXevolution
+            </span>
+          </div>
 
-          {/* para cerrar solo visible en móviles */}
+          {/* Botón de escape "✕" para Móviles */}
           <button
             onClick={() => setIsOpen(false)}
-            className="md:hidden text-slate-400 hover:text-white"
+            className="md:hidden p-1 text-gray-400 hover:text-white rounded-lg transition-colors cursor-pointer"
           >
-            ✕
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button>
         </div>
 
-        <nav className="flex flex-col gap-2 flex-1">
-          <a
-            href="#"
-            className="px-4 py-2.5 rounded-xl bg-slate-900 text-sm font-medium text-white"
+        {/* Menú de Navegación */}
+        <nav className="space-y-1">
+          {/* 🔥 Enlace: Dashboard (Usa "end" para evitar iluminados fantasmas) */}
+          <NavLink to="/dashboard" end className={obtenerEstiloEnlace}>
+            {({ isActive }) => (
+              <div className="flex items-center gap-3">
+                <svg
+                  className={`w-5 h-5 flex-shrink-0 transition-colors ${
+                    isActive
+                      ? "text-white"
+                      : "text-gray-400 group-hover:text-white"
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1.5 1.5 0 001.5 1.5h3a1.5 1.5 0 001.5-1.5v-4a.5.5 0 01.5-.5h2a.5.5 0 01.5.5v4a1.5 1.5 0 001.5 1.5h3a1.5 1.5 0 001.5-1.5V10M9 21h6"
+                  />
+                </svg>
+                <span>Dashboard</span>
+              </div>
+            )}
+          </NavLink>
+
+          {/* 🔥 Enlace: Gestionar Vitrina (Apunta a la ruta anidada correcta) */}
+          <NavLink
+            to="/dashboard/gestionar-vitrina"
+            className={obtenerEstiloEnlace}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              fill="white"
-              class="bi bi-house"
-              viewBox="0 0 16 16"
-            >
-              <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z" />
-            </svg>
-            Inicio
-          </a>
-          <a
-            href="#"
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              fill="yellow"
-              class="bi bi-bell-fill"
-              viewBox="0 0 16 16"
-            >
-              <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2m.995-14.901a1 1 0 1 0-1.99 0A5 5 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901" />
-            </svg>
-            Notificaciones
-          </a>
-          <a
-            href="#"
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              fill="currentColor"
-              class="bi bi-briefcase-fill"
-              viewBox="0 0 16 16"
-            >
-              <path d="M6.5 1A1.5 1.5 0 0 0 5 2.5V3H1.5A1.5 1.5 0 0 0 0 4.5v1.384l7.614 2.03a1.5 1.5 0 0 0 .772 0L16 5.884V4.5A1.5 1.5 0 0 0 14.5 3H11v-.5A1.5 1.5 0 0 0 9.5 1zm0 1h3a.5.5 0 0 1 .5.5V3H6v-.5a.5.5 0 0 1 .5-.5" />
-              <path d="M0 12.5A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5V6.85L8.129 8.947a.5.5 0 0 1-.258 0L0 6.85z" />
-            </svg>{" "}
-            Cargar portafolio
-          </a>
-          <a
-            href="#"
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              fill="white"
-              class="bi bi-calculator"
-              viewBox="0 0 16 16"
-            >
-              <path d="M12 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z" />
-              <path d="M4 2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5zm0 4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z" />
-            </svg>
-            Gestión de Costos
-          </a>
-          <a
-            href="#"
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all"
-          >
-            Motor Presupuesto
-          </a>
-          <a
-            href="#"
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-900 hover:text-white transition-all"
-          >
-            Gestión de Pagos
-          </a>
+            {({ isActive }) => (
+              <>
+                <div className="flex items-center gap-3">
+                  <svg
+                    className={`w-5 h-5 flex-shrink-0 transition-colors ${
+                      isActive
+                        ? "text-white"
+                        : "text-gray-400 group-hover:text-white"
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                    />
+                  </svg>
+                  <span>Gestionar Vitrina</span>
+                </div>
+
+                <svg
+                  className={`w-3.5 h-3.5 transition-colors ${
+                    isActive
+                      ? "text-gray-400"
+                      : "text-gray-600 group-hover:text-gray-400"
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </>
+            )}
+          </NavLink>
         </nav>
+      </div>
+
+      {/* 🚪 SECCIÓN INFERIOR: BOTÓN DE DESCONEXIÓN */}
+      <div className="p-4 border-t border-gray-800/60 bg-[#0f1523]">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-md transition-all active:scale-95 cursor-pointer"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            />
+          </svg>
+          <span>Salir del Sistema</span>
+        </button>
       </div>
     </aside>
   );

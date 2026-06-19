@@ -1,30 +1,13 @@
 import React, { useState } from "react";
-import Sidebar from "../components/Sidebar"; // Asegúrate de quitar las llaves si es export default
-import Topbar from "../components/Topbar";
-import { Card } from "../components/ui/Card";
-
-const MetricCard = ({ title, value, change }) => (
-  <Card className="hover:border-slate-300 transition-all duration-200">
-    <div className="flex flex-col gap-2">
-      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-        {title}
-      </span>
-      <div className="flex items-baseline justify-between">
-        <span className="text-3xl font-bold text-slate-900 tracking-tight">
-          {value}
-        </span>
-        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">
-          {change}
-        </span>
-      </div>
-    </div>
-  </Card>
-);
+import { Outlet } from "react-router-dom"; // 🔥 El motor de intercambio de vistas
+import Sidebar from "../components/Sidebar";
+import Topbar from "../components/Topbar"; // 📊 Tu Topbar original recuperado
 
 export const AdminDashboard = () => {
-  // 🧭 ESTADO CLAVE: Controla si el menú está abierto o cerrado
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  // Estado para abrir/cerrar el Sidebar en pantallas de teléfonos
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Objeto de usuario para tu Topbar corporativo
   const currentUser = {
     name: "Vanessa Rodriguez",
     email: "vanessa@txevolution.com",
@@ -32,8 +15,8 @@ export const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/60 flex font-sans antialiased text-slate-800 relative overflow-x-hidden">
-      {/* 1. Fondo oscuro/Backdrop para cerrar el menú en móviles */}
+    <div className="w-full min-h-screen bg-slate-50/60 flex font-sans antialiased text-slate-800 overflow-hidden relative">
+      {/* Fondo oscuro (Backdrop) que se activa al abrir el menú en móviles */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-slate-900/40 z-40 md:hidden transition-opacity"
@@ -41,36 +24,25 @@ export const AdminDashboard = () => {
         />
       )}
 
-      {/* 2. El Sidebar: Le pasamos el estado y la función para cerrarlo */}
+      {/* 🧭 Menú lateral estable */}
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      {/* 3. Contenedor del contenido principal */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
-        {/* El Topbar: Le pasamos la función para alternar (abrir/cerrar) */}
+      {/* Contenedor del contenido principal (Topbar + Vistas) */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        {/* 🔝 Tu barra superior con los datos del usuario e interactividad */}
         <Topbar
           user={currentUser}
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
 
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-[1400px] w-full mx-auto flex flex-col gap-8">
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <MetricCard
-              title="Proyectos Activos"
-              value="12"
-              change="+2 este mes"
-            />
-          </section>
-
-          <section className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-            <div className="p-6">
-              <h2 className="text-sm font-bold text-slate-900">
-                Historial de Operaciones
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Aquí se renderizará tu tabla de datos de TXevolution.
-              </p>
-            </div>
-          </section>
+        {/* 🚀 ESPACIO DINÁMICO DE TRABAJO */}
+        {/* El 'overflow-y-auto' aquí evita que el formulario de la vitrina rompa el layout */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto min-w-0 w-full mx-auto">
+          <div className="max-w-6xl mx-auto w-full">
+            {/* 🎯 Aquí React Router inyectará de forma fluida tus métricas 
+                o el formulario de PortfolioPage según el menú seleccionado */}
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
