@@ -7,7 +7,9 @@ import { PortfolioRow } from "../components/admin/PortfolioRow";
 export const PortfolioPage = () => {
   const [proyectos, setProyectos] = useState([]);
   const [erroresValidacion, setErroresValidacion] = useState({});
+  const [guardandoRegistro, setGuardandoRegistro] = useState(false);
 
+  // Consumimos todo lo que tu hook ya hace perfectamente
   const {
     formData,
     isModalOpen,
@@ -55,10 +57,67 @@ export const PortfolioPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleConfirmarGuardado = () => {
-    setProyectos((prev) => [{ ...formData, id: Date.now() }, ...prev]);
-    setIsModalOpen(false);
-    resetFormulario();
+  // =================================================================
+  // 🚀 PASO FINAL: Guardar los textos y la URL ya existente en la BD
+  // =================================================================
+  const handleConfirmarGuardado = async () => {
+    try {
+      setGuardandoRegistro(true);
+
+      // Creamos el JSON con la estructura exacta que espera tu tabla "proyectos"
+      const proyectoParaSupabase = {
+        profile_id: "c20df547-0648-433b-85fe-d1912423a677", // Tu ID de administrador
+        destino: formData.destino,
+        nombre: formData.nombre || "Artículo de Vitrina",
+        modelo: formData.modelo || "Genérico",
+        descripcion: formData.descripcion || "",
+        foto_url: formData.fotoUrl, // 👈 ¡Usamos la URL de Supabase que tu hook ya obtuvo!
+        tipo_articulo: formData.tipoArticuloCat || "",
+        subcategoria: formData.subcategoriaUso || "",
+      };
+
+      // Recuerda cambiar 'http://localhost:8080' por tu URL de CodeSandbox si trabajas remoto
+      const resProyecto = await fetch("http://localhost:8000/api/proyectos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(proyectoParaSupabase),
+      });
+
+      if (!resProyecto.ok) {
+        throw new Error(
+          "El backend no pudo registrar el proyecto en la base de datos."
+        );
+      }
+
+      const respuestaBD = await resProyecto.json();
+      console.log("✅ Guardado con éxito en la base de datos:", respuestaBD);
+
+      // Estructuramos el objeto mapeado para que PortfolioRow lo dibuje correctamente
+      const nuevoProyectoTabla = {
+        id: respuestaBD.data?.[0]?.id || Date.now(),
+        nombre: proyectoParaSupabase.nombre,
+        destino: proyectoParaSupabase.destino,
+        modelo: proyectoParaSupabase.modelo,
+        tipoArticuloCat: proyectoParaSupabase.tipo_articulo,
+        subcategoriaUso: proyectoParaSupabase.subcategoria,
+        fotoUrl: proyectoParaSupabase.foto_url, // 'fotoUrl' para que coincida con PortfolioRow
+      };
+
+      // Lo agregamos al listado de la pantalla
+      setProyectos((prev) => [nuevoProyectoTabla, ...prev]);
+
+      // Cerramos y limpiamos
+      setIsModalOpen(false);
+      resetFormulario();
+      alert("¡Proyecto publicado con éxito en TXevolution!");
+    } catch (error) {
+      console.error("❌ Error al guardar datos de texto:", error);
+      alert(`Error al guardar en base de datos: ${error.message}`);
+    } finally {
+      setGuardandoRegistro(false);
+    }
   };
 
   const registrarCambio = (campo, valor) => {
@@ -70,7 +129,7 @@ export const PortfolioPage = () => {
 
   return (
     <div className="w-full animate-fadeIn">
-      {/* COMPONENTE FORMULARIO REFACTORIZADO */}
+      {/* FORMULARIO */}
       <PortfolioForm
         formData={formData}
         errores={erroresValidacion}
@@ -113,7 +172,7 @@ export const PortfolioPage = () => {
         </div>
       </div>
 
-      {/* VENTANA EMERGENTE (MODAL) */}
+      {/* MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
           <div className="bg-white rounded-xl shadow-xl border border-stone-200 max-w-[390px] w-full p-6 flex flex-col items-center gap-5">
@@ -133,17 +192,19 @@ export const PortfolioPage = () => {
             <div className="flex gap-3 w-full mt-2">
               <button
                 type="button"
-                onClick={() => setIsOpen(false)} // Si usas el estado del hook para cerrar
-                className="flex-1 py-2 text-xs font-bold text-stone-500 bg-stone-100 rounded-lg border border-stone-200"
+                disabled={guardandoRegistro}
+                onClick={() => setIsModalOpen(false)}
+                className="flex-1 py-2 text-xs font-bold text-stone-500 bg-stone-100 rounded-lg border border-stone-200 disabled:opacity-50"
               >
                 ✕ Cancelar
               </button>
               <button
                 type="button"
+                disabled={guardandoRegistro}
                 onClick={handleConfirmarGuardado}
-                className="flex-1 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg"
+                className="flex-1 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg flex items-center justify-center disabled:bg-indigo-400"
               >
-                ✓ Publicar Artículo
+                {guardandoRegistro ? "⏳ Guardando..." : "✓ Publicar Artículo"}
               </button>
             </div>
           </div>
