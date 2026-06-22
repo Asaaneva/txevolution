@@ -7,15 +7,16 @@ import { PortfolioRow } from "../components/admin/PortfolioRow";
 export const PortfolioPage = () => {
   const [proyectos, setProyectos] = useState([]);
   const [erroresValidacion, setErroresValidacion] = useState({});
-  const [guardandoRegistro, setGuardandoRegistro] = useState(false);
 
-  // Consumimos todo lo que tu hook ya hace perfectamente
+  // Consumimos de forma elegante la función de guardado y su estado de carga
   const {
     formData,
     isModalOpen,
+    guardandoRegistro,
     setIsModalOpen,
     handleInputChange,
     resetFormulario,
+    publicarProyecto,
   } = usePortfolioForm();
 
   const handleVerVistaPrevia = (e) => {
@@ -23,28 +24,14 @@ export const PortfolioPage = () => {
     const nuevosErrores = {};
 
     if (!formData.destino) nuevosErrores.destino = true;
-
-    if (formData.destino === "index") {
+    if (formData.destino === "index" || formData.destino === "categoria") {
       if (!formData.tipoArticuloCat) nuevosErrores.tipoArticuloCat = true;
       if (!formData.subcategoriaUso) nuevosErrores.subcategoriaUso = true;
     }
-
-    if (formData.destino === "categoria") {
-      if (!formData.tipoArticuloCat) nuevosErrores.tipoArticuloCat = true;
-      if (!formData.subcategoriaUso) nuevosErrores.subcategoriaUso = true;
-      if (formData.subcategoriaUso === "Zapatos") {
-        if (!formData.clasificacionCalzado)
-          nuevosErrores.clasificacionCalzado = true;
-        if (!formData.genero) nuevosErrores.genero = true;
-      }
-    }
-
     if (formData.destino === "producto") {
       if (!formData.nombre?.trim()) nuevosErrores.nombre = true;
       if (!formData.modelo?.trim()) nuevosErrores.modelo = true;
-      if (!formData.genero) nuevosErrores.genero = true;
     }
-
     if (!formData.fotoUrl) nuevosErrores.foto = true;
 
     if (Object.keys(nuevosErrores).length > 0) {
@@ -57,66 +44,18 @@ export const PortfolioPage = () => {
     setIsModalOpen(true);
   };
 
-  // =================================================================
-  // 🚀 PASO FINAL: Guardar los textos y la URL ya existente en la BD
-  // =================================================================
+  // Execución limpia delegando el peso al hook
   const handleConfirmarGuardado = async () => {
     try {
-      setGuardandoRegistro(true);
+      const nuevoProyecto = await publicarProyecto();
 
-      // Creamos el JSON con la estructura exacta que espera tu tabla "proyectos"
-      const proyectoParaSupabase = {
-        profile_id: "c20df547-0648-433b-85fe-d1912423a677", // Tu ID de administrador
-        destino: formData.destino,
-        nombre: formData.nombre || "Artículo de Vitrina",
-        modelo: formData.modelo || "Genérico",
-        descripcion: formData.descripcion || "",
-        foto_url: formData.fotoUrl, // 👈 ¡Usamos la URL de Supabase que tu hook ya obtuvo!
-        tipo_articulo: formData.tipoArticuloCat || "",
-        subcategoria: formData.subcategoriaUso || "",
-      };
-
-      // Recuerda cambiar 'http://localhost:8080' por tu URL de CodeSandbox si trabajas remoto
-      const resProyecto = await fetch("http://localhost:8000/api/proyectos", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(proyectoParaSupabase),
-      });
-
-      if (!resProyecto.ok) {
-        throw new Error(
-          "El backend no pudo registrar el proyecto en la base de datos."
-        );
-      }
-
-      const respuestaBD = await resProyecto.json();
-      console.log("✅ Guardado con éxito en la base de datos:", respuestaBD);
-
-      // Estructuramos el objeto mapeado para que PortfolioRow lo dibuje correctamente
-      const nuevoProyectoTabla = {
-        id: respuestaBD.data?.[0]?.id || Date.now(),
-        nombre: proyectoParaSupabase.nombre,
-        destino: proyectoParaSupabase.destino,
-        modelo: proyectoParaSupabase.modelo,
-        tipoArticuloCat: proyectoParaSupabase.tipo_articulo,
-        subcategoriaUso: proyectoParaSupabase.subcategoria,
-        fotoUrl: proyectoParaSupabase.foto_url, // 'fotoUrl' para que coincida con PortfolioRow
-      };
-
-      // Lo agregamos al listado de la pantalla
-      setProyectos((prev) => [nuevoProyectoTabla, ...prev]);
-
-      // Cerramos y limpiamos
+      setProyectos((prev) => [nuevoProyecto, ...prev]);
       setIsModalOpen(false);
       resetFormulario();
       alert("¡Proyecto publicado con éxito en TXevolution!");
     } catch (error) {
-      console.error("❌ Error al guardar datos de texto:", error);
+      console.error("❌ Error al consolidar registro:", error);
       alert(`Error al guardar en base de datos: ${error.message}`);
-    } finally {
-      setGuardandoRegistro(false);
     }
   };
 
@@ -129,7 +68,6 @@ export const PortfolioPage = () => {
 
   return (
     <div className="w-full animate-fadeIn">
-      {/* FORMULARIO */}
       <PortfolioForm
         formData={formData}
         errores={erroresValidacion}
@@ -142,7 +80,6 @@ export const PortfolioPage = () => {
         <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-4">
           Listado de Proyectos Publicados
         </h3>
-
         <div className="overflow-x-auto w-full">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -172,7 +109,7 @@ export const PortfolioPage = () => {
         </div>
       </div>
 
-      {/* MODAL */}
+      {/* MODAL DE CONFIRMACIÓN */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
           <div className="bg-white rounded-xl shadow-xl border border-stone-200 max-w-[390px] w-full p-6 flex flex-col items-center gap-5">

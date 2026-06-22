@@ -1,94 +1,21 @@
+// src/hooks/usePortfolioForm.js
 import { useState } from "react";
 
-export const usePortfolioForm = (onSuccess) => {
+export const usePortfolioForm = () => {
   const [formData, setFormData] = useState({
     destino: "",
     nombre: "",
     modelo: "",
     descripcion: "",
     fotoUrl: "",
-    nombreArchivo: "Seleccionar archivo...",
-    tipoArticuloIndex: "",
-    subcategoriaIndex: "",
     tipoArticuloCat: "",
-    publico: "",
     subcategoriaUso: "",
   });
-
-  const [errors, setErrors] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [subiendo, setSubiendo] = useState(false); // Estado útil para deshabilitar el botón mientras sube
+  const [guardandoRegistro, setGuardandoRegistro] = useState(false);
 
-  // ✍️ CREADA: Función estándar para actualizar cualquier campo de texto
   const handleInputChange = (campo, valor) => {
-    setFormData((prev) => ({
-      ...prev,
-      [campo]: valor,
-    }));
-  };
-
-  const handleFileChange = async (e) => {
-    const archivoSeleccionado = e.target.files[0];
-    if (!archivoSeleccionado) return;
-
-    setSubiendo(true);
-
-    // Guardamos temporalmente el nombre del archivo en la UI para que el usuario vea qué eligió
-    handleInputChange("nombreArchivo", archivoSeleccionado.name);
-
-    const datosParaEnviar = new FormData();
-    datosParaEnviar.append("file", archivoSeleccionado);
-
-    try {
-      // 🚀 CORREGIDO: Comentario válido para JavaScript (//)
-      const respuesta = await fetch("http://localhost:8080/api/upload-imagen", {
-        method: "POST",
-        body: datosParaEnviar,
-      });
-
-      if (!respuesta.ok) {
-        throw new Error("Error en el servidor al procesar el archivo");
-      }
-
-      const resultado = await respuesta.json();
-
-      console.log(
-        "¡Fotografía almacenada en Supabase Storage!",
-        resultado.fotoUrl
-      );
-
-      // 🎯 CORREGIDO: Usamos el actualizador de estado nativo para guardar la URL de Supabase
-      handleInputChange("fotoUrl", resultado.fotoUrl);
-    } catch (error) {
-      console.error(
-        "Error al conectar con el banco de imágenes de TXevolution:",
-        error
-      );
-      alert("Hubo un problema al subir la foto al servidor.");
-      handleInputChange("nombreArchivo", "Seleccionar archivo...");
-    } finally {
-      setSubiendo(false);
-    }
-  };
-
-  const ejecutarValidacion = (e) => {
-    if (e) e.preventDefault();
-    const newErrors = {};
-
-    if (!formData.destino) newErrors.destino = true;
-    if (formData.destino === "index" && !formData.tipoArticuloIndex)
-      newErrors.tipoArticuloIndex = true;
-    if (!formData.nombre?.trim()) newErrors.nombre = true;
-    if (!formData.modelo?.trim()) newErrors.modelo = true;
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      setTimeout(() => setErrors({}), 450);
-      return false;
-    }
-
-    setIsModalOpen(true);
-    return true;
+    setFormData((prev) => ({ ...prev, [campo]: valor }));
   };
 
   const resetFormulario = () => {
@@ -98,28 +25,53 @@ export const usePortfolioForm = (onSuccess) => {
       modelo: "",
       descripcion: "",
       fotoUrl: "",
-      nombreArchivo: "Seleccionar archivo...",
-      tipoArticuloIndex: "",
-      subcategoriaIndex: "",
       tipoArticuloCat: "",
-      publico: "",
       subcategoriaUso: "",
     });
-    setErrors({});
-    setIsModalOpen(false);
   };
 
-  // Retornamos todos los métodos controlados que tu formulario necesita consumir
+  // 🚀 FUNCIÓN DE PETICIÓN REVISADA Y BLINDADA
+  const publicarProyecto = async () => {
+    setGuardandoRegistro(true);
+    try {
+      const proyectoParaSupabase = {
+        profile_id: "c20df547-0648-433b-85fe-d1912423a677",
+        destino: formData.destino,
+        nombre: formData.nombre || "Artículo de Vitrina",
+        modelo: formData.modelo || "Genérico",
+        descripcion: formData.descripcion || "",
+        foto_url: formData.fotoUrl,
+        tipo_articulo: formData.tipoArticuloCat || "",
+        subcategoria: formData.subcategoriaUso || "",
+      };
+
+      const res = await fetch("http://localhost:8000/api/proyectos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(proyectoParaSupabase),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        const mensajeBackend =
+          errorData.detail || "Error desconocido en el servidor";
+        throw new Error(mensajeBackend);
+      }
+
+      const respuestaBD = await res.json();
+      return respuestaBD;
+    } finally {
+      setGuardandoRegistro(false);
+    }
+  };
+
   return {
     formData,
-    setFormData,
-    errors,
     isModalOpen,
+    guardandoRegistro,
     setIsModalOpen,
-    subiendo, // Te servirá para mostrar un spinner o texto de "Cargando..."
-    handleInputChange, // 🔥 CORREGIDO: Ahora sí está definida
-    handleFileChange, // 🔥 AGREGADO: Necesario para el onChange del <input type="file" />
-    ejecutarValidacion,
+    handleInputChange,
     resetFormulario,
+    publicarProyecto,
   };
 };
