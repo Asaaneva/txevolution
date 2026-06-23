@@ -43,12 +43,11 @@ class CatalogoService:
     @staticmethod
     def obtener_todos_los_proyectos():
         try:
-            # Extrae los datos activos (Filtro de borrado lógico)
             response = (
                 supabase.table("proyectos")
                 .select("*")
-                .eq("activo", True)
-                .order("created_at", descending=True)
+                # Cambiado 'descending=True' por 'desc=True' 👇
+                .order("created_at", desc=True)
                 .execute()
             )
             return response.data
