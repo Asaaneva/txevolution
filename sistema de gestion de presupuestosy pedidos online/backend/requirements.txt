@@ -7,4 +7,4 @@ psycopg2-binary
 pydantic[email]
 pydantic-settings
 Pillow==10.3.0
-python-multipart
+python-multipart==0.0.24

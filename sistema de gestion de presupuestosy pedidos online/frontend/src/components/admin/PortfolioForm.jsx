@@ -308,13 +308,16 @@ export const PortfolioForm = ({
             <label className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">
               Fotografía en Alta Resolución
             </label>
+            {/* 🚀 MODIFICADO: Ahora pasamos el objeto de archivo físico en el callback nativo */}
             <ComponenteCargaFoto
               fotoUrl={formData.fotoUrl}
               nombreArchivo={formData.nombreArchivo}
               hasError={errores.foto}
-              onFotoCambiada={(name, url) => {
-                registrarCambio("nombreArchivo", name);
-                registrarCambio("fotoUrl", url);
+              onFotoCambiada={(archivoImagenObjeto) => {
+                if (archivoImagenObjeto) {
+                  registrarCambio("nombreArchivo", archivoImagenObjeto.name);
+                  registrarCambio("fotoUrl", archivoImagenObjeto); // Mandamos el binario File hacia la lógica interceptora
+                }
               }}
               onFotoRemovida={() => {
                 registrarCambio("nombreArchivo", "Seleccionar archivo...");

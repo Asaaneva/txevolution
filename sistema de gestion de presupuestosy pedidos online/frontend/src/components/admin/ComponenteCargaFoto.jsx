@@ -9,14 +9,21 @@ export const ComponenteCargaFoto = ({ fotoUrl, nombreArchivo, onFotoCambiada, on
     if (file) {
       const validTypes = ["image/jpeg", "image/png"];
       if (validTypes.includes(file.type)) {
-        const reader = new FileReader();
-        reader.onload = (event) => onFotoCambiada(file.name, event.target.result);
-        reader.readAsDataURL(file);
+        
+        // 🚀 Mandamos el objeto File binario real DIRECTO
+        onFotoCambiada(file); 
+
       } else {
-        alert("Solo archivos JPG y PNG.");
+        alert("Solo se permiten archivos JPG y PNG.");
         onFotoRemovida();
+        if (fileInputRef.current) fileInputRef.current.value = "";
       }
     }
+  };
+
+  const handleLimpiarFoto = () => {
+    onFotoRemovida();
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
@@ -24,15 +31,14 @@ export const ComponenteCargaFoto = ({ fotoUrl, nombreArchivo, onFotoCambiada, on
       <label className="text-xs font-bold text-stone-800 tracking-wide">Imagen del Artículo</label>
       
       <div className="relative w-full">
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          onChange={handleFileChange} 
-          accept="image/jpeg, image/png" 
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/jpeg, image/png"
+          onChange={handleFileChange}
           className="hidden"
         />
         
-        {/* Dropzone dinámico con Tailwind */}
         <div 
           onClick={() => fileInputRef.current?.click()}
           className={`flex justify-between items-center p-3 px-4 rounded-lg border cursor-pointer transition-all duration-200
@@ -43,7 +49,9 @@ export const ComponenteCargaFoto = ({ fotoUrl, nombreArchivo, onFotoCambiada, on
                 : "bg-stone-50 border-dashed border-stone-300 text-stone-500 hover:bg-stone-100 hover:border-stone-400"
             }`}
         >
-          <span className="text-xs font-medium truncate max-w-[85%]">{nombreArchivo}</span>
+          <span className="text-xs font-medium truncate max-w-[85%]">
+            {fotoUrl ? nombreArchivo : "Seleccionar archivo..."}
+          </span>
           <span className="text-sm">📷</span>
         </div>
       </div>
@@ -54,10 +62,10 @@ export const ComponenteCargaFoto = ({ fotoUrl, nombreArchivo, onFotoCambiada, on
             <img src={fotoUrl} alt="Mini preview" className="w-full h-full object-cover" />
             <button 
               type="button" 
-              onClick={onFotoRemovida}
+              onClick={handleLimpiarFoto}
               className="absolute top-1 right-1 w-4 h-4 bg-red-600/90 hover:bg-red-600 text-white rounded-full text-[10px] flex items-center justify-center transition-colors"
             >
-              ×
+              ✕
             </button>
           </div>
         </div>
