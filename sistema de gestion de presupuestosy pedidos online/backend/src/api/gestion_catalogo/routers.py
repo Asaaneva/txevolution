@@ -1,11 +1,26 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, status, Body
+from typing import List, Any
 from .models import ProyectoData
 from .service import CatalogoService
 
 router = APIRouter(tags=["Gestión de Catálogo y Vitrina"])
 
 
-# --- 1. SUBIR IMAGEN ---
+# --- 1. OBTENER TODOS LOS PROYECTOS (LISTAR) ---
+# Ponemos el GET arriba para que FastAPI lo evalúe primero
+@router.get("/proyectos", response_model=List[Any])
+async def listar_todos_los_proyectos():
+    try:
+        proyectos = CatalogoService.obtener_todos_los_proyectos()
+        return proyectos
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener los proyectos: {str(e)}"
+        )
+
+
+# --- 2. SUBIR IMAGEN ---
 @router.post("/upload-imagen")
 async def subir_imagen_a_vitrina(file: UploadFile = File(...)):
     try:
@@ -18,7 +33,7 @@ async def subir_imagen_a_vitrina(file: UploadFile = File(...)):
         )
 
 
-# --- 2. CREAR PROYECTO ---
+# --- 3. CREAR PROYECTO ---
 @router.post("/proyectos")
 async def guardar_o_actualizar_vitrina(proyecto: ProyectoData):
     try:
@@ -37,7 +52,7 @@ async def guardar_o_actualizar_vitrina(proyecto: ProyectoData):
         )
 
 
-# --- 3. ACTUALIZAR / EDITAR PROYECTO ---
+# --- 4. ACTUALIZAR / EDITAR PROYECTO ---
 @router.put("/proyectos/{proyecto_id}")
 async def actualizar_proyecto_vitrina(
     proyecto_id: str, proyecto: ProyectoData
@@ -58,7 +73,7 @@ async def actualizar_proyecto_vitrina(
         )
 
 
-# --- 4. ELIMINAR PROYECTO Y SU FOTO ---
+# --- 5. ELIMINAR PROYECTO Y SU FOTO ---
 @router.delete("/proyectos/{proyecto_id}")
 async def eliminar_proyecto_vitrina(
     proyecto_id: str, nombre_archivo_storage: str = Body(..., embed=True)

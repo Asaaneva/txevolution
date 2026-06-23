@@ -8,7 +8,7 @@ export const PortfolioPage = () => {
   const [proyectos, setProyectos] = useState([]);
   const [erroresValidacion, setErroresValidacion] = useState({});
 
-  // 🚀 Guardamos el archivo físico puro (File) aquí de forma independiente
+  // 📸 Guardamos el archivo físico puro (File) aquí de forma independiente
   const [archivoFisicoFoto, setArchivoFisicoFoto] = useState(null);
 
   const {
@@ -21,6 +21,7 @@ export const PortfolioPage = () => {
     publicarProyecto,
   } = usePortfolioForm();
 
+  // 🔄 Hidratamos el listado llamando al nuevo endpoint GET de FastAPI
   const cargarVitrinaDesdeElBackend = async () => {
     try {
       const res = await fetch("http://localhost:8000/api/proyectos");
@@ -28,6 +29,7 @@ export const PortfolioPage = () => {
         throw new Error("No se pudo conectar con el servidor central.");
       const datosBD = await res.json();
 
+      // Mapeamos los campos del backend snake_case a tu formato camelCase del Front
       const proyectosMapeados = datosBD.map((p) => ({
         id: p.id,
         nombre: p.nombre,
@@ -35,7 +37,7 @@ export const PortfolioPage = () => {
         modelo: p.modelo,
         tipoArticuloCat: p.tipo_articulo,
         subcategoriaUso: p.subcategoria,
-        fotoUrl: p.foto_url,
+        fotoUrl: p.foto_url, // URL limpia de Supabase Storage (.webp)
       }));
 
       setProyectos(proyectosMapeados);
@@ -75,15 +77,18 @@ export const PortfolioPage = () => {
     setIsModalOpen(true); // Abre el modal de confirmación
   };
 
+  // 🚀 Al confirmar, guardamos pasándole la foto y los textos, y refrescamos la lista
   const handleConfirmarGuardado = async () => {
     try {
-      // Pasamos el archivo binario guardado directamente al hook
+      // Pasamos el archivo físico guardado en el estado local de la página
       await publicarProyecto(archivoFisicoFoto);
+      
+      // Recargamos el listado automáticamente
       await cargarVitrinaDesdeElBackend();
 
       setIsModalOpen(false);
       resetFormulario();
-      setArchivoFisicoFoto(null); // Limpiamos el estado local
+      setArchivoFisicoFoto(null); 
       alert("¡Proyecto publicado con éxito!");
     } catch (error) {
       alert(`Error: ${error.message}`);
@@ -92,21 +97,17 @@ export const PortfolioPage = () => {
 
   const registrarCambio = (campo, valor) => {
     if (campo === "fotoUrl") {
-      // Si recibimos el objeto File binario real del componente
       if (valor instanceof File) {
         setArchivoFisicoFoto(valor); // Guardamos el binario para mandarlo a FastAPI
-
         const urlVisualTemporal = URL.createObjectURL(valor);
-        handleInputChange("fotoUrl", urlVisualTemporal); // Para que se vea en el formulario y la tarjeta
-        handleInputChange("nombreArchivo", valor.name); // Guardamos el texto del nombre en el formData
+        handleInputChange("fotoUrl", urlVisualTemporal); // Para previsualización temporal
+        handleInputChange("nombreArchivo", valor.name);
       } else {
-        // Si se limpia la foto
         setArchivoFisicoFoto(null);
         handleInputChange("fotoUrl", "");
         handleInputChange("nombreArchivo", "Seleccionar archivo...");
       }
     } else {
-      // Para todos los demás campos (nombre, modelo, destino, etc.)
       handleInputChange(campo, valor);
     }
 
@@ -117,7 +118,7 @@ export const PortfolioPage = () => {
 
   return (
     <div className="w-full animate-fadeIn">
-      {/* Pasamos formData limpio, sin sobreescrituras raras */}
+      {/* Formulario principal */}
       <PortfolioForm
         formData={formData}
         errores={erroresValidacion}
@@ -125,7 +126,7 @@ export const PortfolioPage = () => {
         onSubmit={handleVerVistaPrevia}
       />
 
-      {/* ... (Tu tabla de listado se mantiene igual) ... */}
+      {/* Tabla de listado conectada en tiempo real */}
       <div className="bg-white rounded-xl border border-stone-200/80 shadow-xs p-6 mt-6">
         <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-4">
           Listado de Proyectos Publicados
@@ -152,13 +153,16 @@ export const PortfolioPage = () => {
                   </td>
                 </tr>
               ) : (
-                proyectos.map((p) => <PortfolioRow key={p.id} proyecto={p} />)
+                proyectos.map((p) => (
+                  <PortfolioRow key={p.id} proyecto={p} />
+                ))
               )}
             </tbody>
           </table>
         </div>
       </div>
 
+      {/* Modal de confirmación con LivePreview */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
           <div className="bg-white rounded-xl shadow-xl border border-stone-200 max-w-[390px] w-full p-6 flex flex-col items-center gap-5">
