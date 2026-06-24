@@ -7,7 +7,7 @@ import {
 } from "react-router-dom";
 import AdminLogin from "../pages/AdminLogin";
 import AdminDashboard from "../pages/AdminDashboard";
-import PortfolioPage from "../pages/PortfolioPage"; // 🔥 Tu página de siempre (con el código modular adentro)
+import { PortfolioPage } from "../pages/PortfolioPage"; // 🔥 Tu página de siempre (con el código modular adentro)
 import { Card } from "../components/ui/Card"; // Para las métricas en línea
 
 export const AppRoutes = () => {

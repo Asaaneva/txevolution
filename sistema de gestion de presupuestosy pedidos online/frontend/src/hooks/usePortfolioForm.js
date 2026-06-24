@@ -16,7 +16,7 @@ export const usePortfolioForm = () => {
   const [formData, setFormData] = useState(VALORES_INICIALES);
   const [guardandoRegistro, setGuardandoRegistro] = useState(false);
 
-  // 👁️ ESTADOS COMPLEMENTARIOS PARA QUE EL FRONTEND NO LOGEE "UNDEFINED"
+  // Estados complementarios para la interfaz
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [proyectoEdicionId, setProyectoEdicionId] = useState(null);
 
@@ -29,7 +29,6 @@ export const usePortfolioForm = () => {
     setProyectoEdicionId(null);
   };
 
-  // Carga los datos de un proyecto existente en el formulario de arriba
   const prepararEdicion = (proyecto) => {
     setProyectoEdicionId(proyecto.id);
     setFormData({
@@ -49,29 +48,50 @@ export const usePortfolioForm = () => {
   const publicarProyecto = async (archivoFoto) => {
     setGuardandoRegistro(true);
     try {
-      const dataToSend = new FormData();
-      dataToSend.append("nombre", formData.nombre);
-      dataToSend.append("destino", formData.destino);
-      dataToSend.append("modelo", formData.modelo);
-      dataToSend.append("descripcion", formData.descripcion || "");
-      dataToSend.append("tipo_articulo", formData.tipoArticuloCat);
-      dataToSend.append("subcategoria", formData.subcategoriaUso);
-      dataToSend.append("genero", formData.genero);
-      dataToSend.append("clasificacion_calzado", formData.clasificacionCalzado);
+      let urlImagenFinal = formData.fotoUrl;
 
+      // 1. Si el usuario subió un archivo nuevo, lo enviamos primero al bucket
       if (archivoFoto) {
-        dataToSend.append("file", archivoFoto);
+        const bodyImagen = new FormData();
+        bodyImagen.append("file", archivoFoto);
+
+        const resImagen = await fetch("http://localhost:8000/upload-imagen", {
+          method: "POST",
+          body: bodyImagen,
+        });
+
+        if (!resImagen.ok)
+          throw new Error("Fallo al subir la imagen al almacén.");
+        const dataImagen = await resImagen.json();
+        urlImagenFinal = dataImagen.fotoUrl; // Guardamos el enlace público generado
       }
 
+      // 2. Construimos el JSON limpio mapeado idénticamente a ProyectoData en Pydantic
+      const payloadJson = {
+        nombre: formData.nombre,
+        destino: formData.destino,
+        modelo: formData.modelo,
+        descripcion: formData.descripcion || "",
+        tipoArticuloCat: formData.tipoArticuloCat,
+        subcategoriaUso: formData.subcategoriaUso,
+        genero: formData.genero,
+        clasificacionCalzado: formData.clasificacionCalzado,
+        fotoUrl: urlImagenFinal,
+      };
+
+      // CORREGIDO: Eliminamos el '/api' fantasma de las URLs
       const url = proyectoEdicionId
-        ? `http://localhost:8000/api/proyectos/${proyectoEdicionId}`
-        : "http://localhost:8000/api/proyectos";
+        ? `http://localhost:8000/proyectos/${proyectoEdicionId}`
+        : "http://localhost:8000/proyectos";
 
       const method = proyectoEdicionId ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method: method,
-        body: dataToSend,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payloadJson),
       });
 
       if (!response.ok) {
@@ -81,7 +101,7 @@ export const usePortfolioForm = () => {
 
       return await response.json();
     } catch (error) {
-      console.error(error);
+      console.error("❌ Error al publicar proyecto:", error);
       throw error;
     } finally {
       setGuardandoRegistro(false);
@@ -92,36 +112,14 @@ export const usePortfolioForm = () => {
   const guardarCambiosFilaDirecto = async (id, camposModificados) => {
     setGuardandoRegistro(true);
     try {
-      const dataToSend = new FormData();
-      dataToSend.append("nombre", camposModificados.nombre || "");
-      dataToSend.append("destino", camposModificados.destino || "");
-      dataToSend.append("modelo", camposModificados.modelo || "");
-      dataToSend.append("descripcion", camposModificados.descripcion || "");
-      dataToSend.append(
-        "tipo_articulo",
-        camposModificados.tipoArticuloCat || ""
-      );
-      dataToSend.append(
-        "subcategoria",
-        camposModificados.subcategoriaUso || ""
-      );
-      dataToSend.append("genero", camposModificados.genero || "");
-      dataToSend.append(
-        "clasificacion_calzado",
-        camposModificados.clasificacionCalzado || ""
-      );
-
-      if (camposModificados.archivoFisico) {
-        dataToSend.append("file", camposModificados.archivoFisico);
-      }
-
-      const response = await fetch(
-        `http://localhost:8000/api/proyectos/${id}`,
-        {
-          method: "PUT",
-          body: dataToSend,
-        }
-      );
+      // CORREGIDO: Enviamos JSON en lugar de FormData para evitar el error 422
+      const response = await fetch(`http://localhost:8000/proyectos/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(camposModificados),
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -130,34 +128,40 @@ export const usePortfolioForm = () => {
 
       return await response.json();
     } catch (error) {
-      console.error(error);
+      console.error("❌ Error en edición rápida:", error);
       throw error;
     } finally {
       setGuardandoRegistro(false);
     }
   };
 
-  // Eliminar proyecto por ID numérico limpio
+  // Eliminar proyecto por ID aplicando baja lógica
   const eliminarProyecto = async (id) => {
     try {
-      const idLimpio = parseInt(id, 10);
-      if (isNaN(idLimpio)) throw new Error("ID no válido.");
+      if (!id) throw new Error("ID requerido para auditoría.");
 
-      const response = await fetch(
-        `http://localhost:8000/api/proyectos/${idLimpio}`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const response = await fetch(`http://localhost:8000/proyectos/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.detail || `Error ${response.status}`);
+        const datosRespuesta = await response.json().catch(() => ({}));
+        const mensajeLimpio =
+          typeof datosRespuesta.detail === "object"
+            ? JSON.stringify(datosRespuesta.detail)
+            : datosRespuesta.detail;
+
+        throw new Error(
+          mensajeLimpio || `Fallo en el servidor (Código ${response.status})`
+        );
       }
+
       return true;
     } catch (error) {
-      console.error(error);
+      console.error("❌ Error en el hook al aplicar borrado lógico:", error);
       throw error;
     }
   };

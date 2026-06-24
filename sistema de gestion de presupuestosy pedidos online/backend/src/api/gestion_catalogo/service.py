@@ -11,6 +11,20 @@ BUCKET_NAME = "imagenes-productos"
 class CatalogoService:
 
     @staticmethod
+    def obtener_todos_los_proyectos():
+        try:
+            response = (
+                supabase.table("proyectos")
+                .select("*")
+                .order("created_at", desc=True)
+                .execute()
+            )
+            return response.data
+        except Exception as e:
+            print(f"❌ Error en CatalogoService al obtener: {str(e)}")
+            raise e
+
+    @staticmethod
     async def procesar_y_subir_imagen(file: UploadFile) -> str:
         contenido_original = await file.read()
 
@@ -41,22 +55,6 @@ class CatalogoService:
         return response.data
 
     @staticmethod
-    def obtener_todos_los_proyectos():
-        try:
-            response = (
-                supabase.table("proyectos")
-                .select("*")
-                # Cambiado 'descending=True' por 'desc=True' 👇
-                .order("created_at", desc=True)
-                .execute()
-            )
-            return response.data
-        except Exception as e:
-            print(f"❌ Error en CatalogoService al obtener: {str(e)}")
-            raise e
-
-    # 🚀 NUEVO: Método para actualizar los datos de un proyecto
-    @staticmethod
     def actualizar_proyecto(proyecto_id: str, datos_actualizados: dict):
         try:
             response = (
@@ -70,29 +68,26 @@ class CatalogoService:
             print(f"❌ Error en CatalogoService al actualizar: {str(e)}")
             raise e
 
-    # 🚀 NUEVO: Método para eliminar físicamente la foto del Storage
-    @staticmethod
-    def eliminar_foto_storage(nombre_archivo_storage: str):
-        try:
-            # Remueve el archivo del bucket usando su nombre único .webp
-            supabase.storage.from_(BUCKET_NAME).remove(
-                [nombre_archivo_storage])
-        except Exception as e:
-            print(f"❌ Error al eliminar archivo en el Storage: {str(e)}")
-            raise e
-
-    # 🚀 NUEVO: Método para eliminar el registro de la Base de Datos
     @staticmethod
     def eliminar_proyecto_db(proyecto_id: str):
         try:
-            # Si usas borrado físico (eliminar la fila por completo):
+            # Opción recomendada para Borrado Lógico: cambia una columna 'activo' a False 
+            # en vez de borrar la fila física, guardando el registro para auditoría.
             response = (
                 supabase.table("proyectos")
-                .delete()
+                .update({"activo": False})
                 .eq("id", proyecto_id)
                 .execute()
             )
             return response.data
         except Exception as e:
-            print(f"❌ Error en CatalogoService al eliminar DB: {str(e)}")
+            print(f"❌ Error en CatalogoService al aplicar borrado lógico: {str(e)}")
+            raise e
+
+    @staticmethod
+    def eliminar_foto_storage(nombre_archivo_storage: str):
+        try:
+            supabase.storage.from_(BUCKET_NAME).remove([nombre_archivo_storage])
+        except Exception as e:
+            print(f"❌ Error al eliminar archivo en el Storage: {str(e)}")
             raise e

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, status, Body
+from fastapi import APIRouter, HTTPException, UploadFile, File, status
 from typing import List, Any
 from .models import ProyectoData
 from .service import CatalogoService
@@ -7,9 +7,8 @@ router = APIRouter(tags=["Gestión de Catálogo y Vitrina"])
 
 
 # --- 1. OBTENER TODOS LOS PROYECTOS (LISTAR) ---
-# Ponemos el GET arriba para que FastAPI lo evalúe primero
 @router.get("/proyectos", response_model=List[Any])
-async def listar_todos_los_proyectos():
+def listar_todos_los_proyectos():  # Síncrono para acoplarse al cliente síncrono de Supabase
     try:
         proyectos = CatalogoService.obtener_todos_los_proyectos()
         return proyectos
@@ -22,7 +21,7 @@ async def listar_todos_los_proyectos():
 
 # --- 2. SUBIR IMAGEN ---
 @router.post("/upload-imagen")
-async def subir_imagen_a_vitrina(file: UploadFile = File(...)):
+async def subir_imagen_a_vitrina(file: UploadFile = File(...)):  # Mantiene async porque usa await file.read()
     try:
         url_publica = await CatalogoService.procesar_y_subir_imagen(file)
         return {"fotoUrl": url_publica}
@@ -35,7 +34,7 @@ async def subir_imagen_a_vitrina(file: UploadFile = File(...)):
 
 # --- 3. CREAR PROYECTO ---
 @router.post("/proyectos")
-async def guardar_o_actualizar_vitrina(proyecto: ProyectoData):
+def guardar_o_actualizar_vitrina(proyecto: ProyectoData):
     try:
         datos_guardados = CatalogoService.consolidar_proyecto(
             proyecto.model_dump()
@@ -54,9 +53,7 @@ async def guardar_o_actualizar_vitrina(proyecto: ProyectoData):
 
 # --- 4. ACTUALIZAR / EDITAR PROYECTO ---
 @router.put("/proyectos/{proyecto_id}")
-async def actualizar_proyecto_vitrina(
-    proyecto_id: str, proyecto: ProyectoData
-):
+def actualizar_proyecto_vitrina(proyecto_id: str, proyecto: ProyectoData):
     try:
         datos_actualizados = CatalogoService.actualizar_proyecto(
             proyecto_id, proyecto.model_dump()
@@ -73,20 +70,18 @@ async def actualizar_proyecto_vitrina(
         )
 
 
-# --- 5. ELIMINAR PROYECTO Y SU FOTO ---
-@router.delete("/proyectos/{proyecto_id}")
-async def eliminar_proyecto_vitrina(
-    proyecto_id: str, nombre_archivo_storage: str = Body(..., embed=True)
-):
+# --- 5. ELIMINAR PROYECTO (BORRADO LÓGICO VÍA PATCH) ---
+# Modificado para acoplarse exactamente al fetch de tu React sin cuerpo (Body)
+@router.patch("/proyectos/{proyecto_id}")
+def eliminar_proyecto_vitrina(proyecto_id: str):
     try:
-        CatalogoService.eliminar_foto_storage(nombre_archivo_storage)
         CatalogoService.eliminar_proyecto_db(proyecto_id)
         return {
             "status": "success",
-            "message": "Proyecto e imagen eliminados"
+            "message": "Proyecto dado de baja correctamente (Auditoría protegida)"
         }
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al eliminar en TXevolution: {str(e)}"
+            detail=f"Error al procesar la baja en TXevolution: {str(e)}"
         )
