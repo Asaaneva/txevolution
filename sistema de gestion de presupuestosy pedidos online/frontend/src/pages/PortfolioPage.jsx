@@ -20,9 +20,9 @@ export const PortfolioPage = () => {
     prepararEdicion,
     publicarProyecto,
     eliminarProyecto,
+    guardarCambiosFilaDirecto,
   } = usePortfolioForm();
 
-  // 🔄 Cargar y transformar datos del Backend centralizados
   const cargarVitrinaDesdeElBackend = async () => {
     try {
       const res = await fetch("http://localhost:8000/api/proyectos");
@@ -39,7 +39,6 @@ export const PortfolioPage = () => {
         tipoArticuloCat: p.tipo_articulo,
         subcategoriaUso: p.subcategoria,
         fotoUrl: p.foto_url,
-        // 🛠️ Agregados de forma segura por si tu base de datos o modelos los usan
         genero: p.genero || "",
         clasificacionCalzado: p.clasificacion_calzado || "",
       }));
@@ -68,7 +67,6 @@ export const PortfolioPage = () => {
       if (!formData.modelo?.trim()) nuevosErrores.modelo = true;
     }
 
-    // Si no estamos editando, la foto física es obligatoria. Al editar, es opcional.
     if (!archivoFisicoFoto && !proyectoEdicionId) nuevosErrores.foto = true;
 
     if (Object.keys(nuevosErrores).length > 0) {
@@ -81,21 +79,15 @@ export const PortfolioPage = () => {
     setIsModalOpen(true);
   };
 
-  // 🛠️ FIX: Sincronización exacta del ciclo de guardado/edición
   const handleConfirmarGuardado = async () => {
     try {
-      // 1. Enviamos la petición a FastAPI (POST o PUT automático según proyectoEdicionId)
       await publicarProyecto(archivoFisicoFoto);
-
-      // Guardamos una referencia local para el alert antes de resetear
       const eraEdicion = !!proyectoEdicionId;
 
-      // 2. Limpieza de estados del contenedor de manera ordenada
       setIsModalOpen(false);
       setArchivoFisicoFoto(null);
-      resetFormulario(); // Limpia campos y desactiva modo edición en el hook
+      resetFormulario();
 
-      // 3. Traer datos frescos de la Base de Datos
       await cargarVitrinaDesdeElBackend();
 
       alert(
@@ -108,28 +100,34 @@ export const PortfolioPage = () => {
     }
   };
 
-  const handleEliminar = async (id, urlFoto) => {
-    if (
-      window.confirm(
-        "¿Estás seguro de que deseas eliminar este artículo de la vitrina?"
-      )
-    ) {
+  const handleGuardarCambiosFila = async (id, camposModificados) => {
+    try {
+      await guardarCambiosFilaDirecto(id, camposModificados);
+      await cargarVitrinaDesdeElBackend();
+      alert("¡Cambios guardados correctamente en la fila!");
+    } catch (error) {
+      alert(`Error al actualizar fila: ${error.message}`);
+      throw error;
+    }
+  };
+
+  const handleEliminar = async (id) => {
+    if (window.confirm("¿Estás seguro de que deseas eliminar este artículo?")) {
       try {
-        await eliminarProyecto(id, urlFoto);
-        alert("🎉 Artículo e imagen eliminados correctamente.");
+        await eliminarProyecto(id);
+        alert("🎉 Artículo eliminado correctamente.");
         await cargarVitrinaDesdeElBackend();
       } catch (error) {
         alert("Error al eliminar: " + error.message);
       }
     }
-  };
+  }; // <--- ¡AQUÍ ESTABA EL ERROR! Faltaba cerrar esta llave
 
   const registrarCambio = (campo, valor) => {
     if (campo === "fotoUrl") {
       if (valor instanceof File) {
         setArchivoFisicoFoto(valor);
-        const urlVisualTemporal = URL.createObjectURL(valor);
-        handleInputChange("fotoUrl", urlVisualTemporal);
+        handleInputChange("fotoUrl", URL.createObjectURL(valor));
         handleInputChange("nombreArchivo", valor.name);
       } else {
         handleInputChange("fotoUrl", valor);
@@ -145,7 +143,6 @@ export const PortfolioPage = () => {
 
   return (
     <div className="w-full animate-fadeIn">
-      {/* Formulario principal */}
       <PortfolioForm
         formData={formData}
         errores={erroresValidacion}
@@ -155,13 +152,12 @@ export const PortfolioPage = () => {
         onCancelarEdicion={resetFormulario}
       />
 
-      {/* Tabla de listado conectado */}
-      <div className="bg-white rounded-xl border border-stone-200/80 shadow-xs p-6 mt-6">
+      <div className="bg-white rounded-xl border border-stone-200/80 shadow-sm p-6 mt-6">
         <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-4">
           Listado de Proyectos Publicados{" "}
           {proyectoEdicionId && (
             <span className="text-amber-500 font-normal normal-case">
-              (Modo edición activo)
+              (Modo formulario activo)
             </span>
           )}
         </h3>
@@ -192,8 +188,9 @@ export const PortfolioPage = () => {
                   <PortfolioRow
                     key={p.id}
                     proyecto={p}
+                    onGuardarCambios={handleGuardarCambiosFila}
+                    onEliminar={handleEliminar}
                     onEditar={() => prepararEdicion(p)}
-                    onEliminar={() => handleEliminar(p.id, p.fotoUrl)}
                   />
                 ))
               )}
@@ -202,7 +199,6 @@ export const PortfolioPage = () => {
         </div>
       </div>
 
-      {/* Modal de confirmación con LivePreview */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
           <div className="bg-white rounded-xl shadow-xl border border-stone-200 max-w-[390px] w-full p-6 flex flex-col items-center gap-5">
@@ -212,15 +208,10 @@ export const PortfolioPage = () => {
                   ? "👁️ Confirmar Cambios de Edición"
                   : "👁️ Confirmación de Vitrina"}
               </h3>
-              <p className="text-[11px] text-stone-400 mt-0.5">
-                Comprueba la distribución antes de publicar.
-              </p>
             </div>
-
             <div className="w-full flex justify-center py-1">
               <LivePreviewCard datos={formData} />
             </div>
-
             <div className="flex gap-3 w-full mt-2">
               <button
                 type="button"
@@ -249,5 +240,3 @@ export const PortfolioPage = () => {
     </div>
   );
 };
-
-export default PortfolioPage;

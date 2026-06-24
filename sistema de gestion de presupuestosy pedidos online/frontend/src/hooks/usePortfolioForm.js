@@ -10,30 +10,26 @@ const VALORES_INICIALES = {
   genero: "",
   clasificacionCalzado: "",
   fotoUrl: "",
-  nombreArchivo: "",
 };
 
 export const usePortfolioForm = () => {
   const [formData, setFormData] = useState(VALORES_INICIALES);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [guardandoRegistro, setGuardandoRegistro] = useState(false);
+
+  // 👁️ ESTADOS COMPLEMENTARIOS PARA QUE EL FRONTEND NO LOGEE "UNDEFINED"
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [proyectoEdicionId, setProyectoEdicionId] = useState(null);
 
-  // Cambiar dinámicamente propiedades del formulario
   const handleInputChange = (campo, valor) => {
-    setFormData((prev) => ({
-      ...prev,
-      [campo]: valor,
-    }));
+    setFormData((prev) => ({ ...prev, [campo]: valor }));
   };
 
-  // Limpiar el formulario por completo y salir de modo edición
   const resetFormulario = () => {
     setFormData(VALORES_INICIALES);
     setProyectoEdicionId(null);
   };
 
-  // Cargar datos en el formulario al presionar "Editar" en la fila
+  // Carga los datos de un proyecto existente en el formulario de arriba
   const prepararEdicion = (proyecto) => {
     setProyectoEdicionId(proyecto.id);
     setFormData({
@@ -46,11 +42,10 @@ export const usePortfolioForm = () => {
       genero: proyecto.genero || "",
       clasificacionCalzado: proyecto.clasificacionCalzado || "",
       fotoUrl: proyecto.fotoUrl || "",
-      nombreArchivo: "",
     });
   };
 
-  // Guardar o Actualizar el Registro en FastAPI
+  // Acción para el botón Publicar/Guardar del formulario principal
   const publicarProyecto = async (archivoFoto) => {
     setGuardandoRegistro(true);
     try {
@@ -58,18 +53,16 @@ export const usePortfolioForm = () => {
       dataToSend.append("nombre", formData.nombre);
       dataToSend.append("destino", formData.destino);
       dataToSend.append("modelo", formData.modelo);
-      dataToSend.append("descripcion", formData.descripcion);
+      dataToSend.append("descripcion", formData.descripcion || "");
       dataToSend.append("tipo_articulo", formData.tipoArticuloCat);
       dataToSend.append("subcategoria", formData.subcategoriaUso);
       dataToSend.append("genero", formData.genero);
       dataToSend.append("clasificacion_calzado", formData.clasificacionCalzado);
 
-      // Si hay un archivo binario nuevo, se envía
       if (archivoFoto) {
         dataToSend.append("file", archivoFoto);
       }
 
-      // Determinar la URL y el método HTTP correcto de manera dinámica
       const url = proyectoEdicionId
         ? `http://localhost:8000/api/proyectos/${proyectoEdicionId}`
         : "http://localhost:8000/api/proyectos";
@@ -78,43 +71,93 @@ export const usePortfolioForm = () => {
 
       const response = await fetch(url, {
         method: method,
-        body: dataToSend, // Al pasar un FormData, el navegador asigna los encabezados multipart automáticamente
+        body: dataToSend,
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.detail || "Error en la operación con el servidor."
-        );
+        throw new Error(errorData.detail || "Error al procesar el registro.");
       }
 
       return await response.json();
     } catch (error) {
-      console.error("❌ Error en publicarProyecto:", error);
+      console.error(error);
       throw error;
     } finally {
       setGuardandoRegistro(false);
     }
   };
 
-  // Eliminar un Registro de la BD
-  const eliminarProyecto = async (id, urlFoto) => {
+  // Guarda los cambios instantáneos cuando editas directamente desde la fila de la tabla
+  const guardarCambiosFilaDirecto = async (id, camposModificados) => {
+    setGuardandoRegistro(true);
     try {
+      const dataToSend = new FormData();
+      dataToSend.append("nombre", camposModificados.nombre || "");
+      dataToSend.append("destino", camposModificados.destino || "");
+      dataToSend.append("modelo", camposModificados.modelo || "");
+      dataToSend.append("descripcion", camposModificados.descripcion || "");
+      dataToSend.append(
+        "tipo_articulo",
+        camposModificados.tipoArticuloCat || ""
+      );
+      dataToSend.append(
+        "subcategoria",
+        camposModificados.subcategoriaUso || ""
+      );
+      dataToSend.append("genero", camposModificados.genero || "");
+      dataToSend.append(
+        "clasificacion_calzado",
+        camposModificados.clasificacionCalzado || ""
+      );
+
+      if (camposModificados.archivoFisico) {
+        dataToSend.append("file", camposModificados.archivoFisico);
+      }
+
       const response = await fetch(
         `http://localhost:8000/api/proyectos/${id}`,
         {
-          method: "DELETE",
+          method: "PUT",
+          body: dataToSend,
         }
       );
 
       if (!response.ok) {
-        throw new Error(
-          "No se pudo eliminar el artículo del servidor backend."
-        );
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Error al actualizar la fila.");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(error);
+      throw error;
+    } finally {
+      setGuardandoRegistro(false);
+    }
+  };
+
+  // Eliminar proyecto por ID numérico limpio
+  const eliminarProyecto = async (id) => {
+    try {
+      const idLimpio = parseInt(id, 10);
+      if (isNaN(idLimpio)) throw new Error("ID no válido.");
+
+      const response = await fetch(
+        `http://localhost:8000/api/proyectos/${idLimpio}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || `Error ${response.status}`);
       }
       return true;
     } catch (error) {
-      console.error("❌ Error en eliminarProyecto:", error);
+      console.error(error);
       throw error;
     }
   };
@@ -129,6 +172,7 @@ export const usePortfolioForm = () => {
     resetFormulario,
     prepararEdicion,
     publicarProyecto,
+    guardarCambiosFilaDirecto,
     eliminarProyecto,
   };
 };
