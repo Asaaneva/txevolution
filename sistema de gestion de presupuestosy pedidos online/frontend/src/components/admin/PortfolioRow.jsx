@@ -1,15 +1,19 @@
 import React from "react";
 
-export const PortfolioRow = ({ proyecto }) => {
+export const PortfolioRow = ({ proyecto, onEditar, onEliminar }) => {
+  // Evitar colapsos si el objeto viene vacío por un error de carga
+  if (!proyecto) return null;
+
   const {
-    nombre,
-    destino,
-    modelo,
-    genero,
-    tipoArticuloCat,
-    subcategoriaUso,
-    clasificacionCalzado,
-    fotoUrl,
+    id,
+    nombre = "",
+    destino = "",
+    modelo = "",
+    tipoArticuloCat = "",
+    subcategoriaUso = "",
+    fotoUrl = "",
+    genero = "",
+    clasificacionCalzado = "",
   } = proyecto;
 
   return (
@@ -18,7 +22,7 @@ export const PortfolioRow = ({ proyecto }) => {
         {fotoUrl ? (
           <img
             src={fotoUrl}
-            alt="miniatura"
+            alt={nombre}
             className="w-10 h-10 object-cover rounded-md border border-stone-200"
           />
         ) : (
@@ -40,7 +44,7 @@ export const PortfolioRow = ({ proyecto }) => {
               : "bg-indigo-50 text-indigo-800 border border-indigo-200"
           }`}
         >
-          {destino}
+          {destino || "No definido"}
         </span>
       </td>
       <td className="p-3.5 text-stone-500 font-mono">
@@ -65,6 +69,25 @@ export const PortfolioRow = ({ proyecto }) => {
             ↳ {clasificacionCalzado}
           </div>
         )}
+      </td>
+
+      <td className="p-3.5 text-center">
+        <div className="flex justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => onEditar && onEditar()}
+            className="px-2.5 py-1 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+          >
+            Editar
+          </button>
+          <button
+            type="button"
+            onClick={() => onEliminar && onEliminar()}
+            className="px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-md transition-colors"
+          >
+            Eliminar
+          </button>
+        </div>
       </td>
     </tr>
   );

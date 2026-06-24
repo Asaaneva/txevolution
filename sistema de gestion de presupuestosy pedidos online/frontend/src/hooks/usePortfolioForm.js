@@ -1,93 +1,121 @@
-// src/hooks/usePortfolioForm.js
 import { useState } from "react";
 
+const VALORES_INICIALES = {
+  nombre: "",
+  destino: "",
+  modelo: "",
+  descripcion: "",
+  tipoArticuloCat: "",
+  subcategoriaUso: "",
+  genero: "",
+  clasificacionCalzado: "",
+  fotoUrl: "",
+  nombreArchivo: "",
+};
+
 export const usePortfolioForm = () => {
-  const [formData, setFormData] = useState({
-    destino: "",
-    nombre: "",
-    modelo: "",
-    descripcion: "",
-    fotoUrl: "",
-    tipoArticuloCat: "",
-    subcategoriaUso: "",
-  });
+  const [formData, setFormData] = useState(VALORES_INICIALES);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [guardandoRegistro, setGuardandoRegistro] = useState(false);
+  const [proyectoEdicionId, setProyectoEdicionId] = useState(null);
 
+  // Cambiar dinámicamente propiedades del formulario
   const handleInputChange = (campo, valor) => {
-    setFormData((prev) => ({ ...prev, [campo]: valor }));
+    setFormData((prev) => ({
+      ...prev,
+      [campo]: valor,
+    }));
   };
 
+  // Limpiar el formulario por completo y salir de modo edición
   const resetFormulario = () => {
+    setFormData(VALORES_INICIALES);
+    setProyectoEdicionId(null);
+  };
+
+  // Cargar datos en el formulario al presionar "Editar" en la fila
+  const prepararEdicion = (proyecto) => {
+    setProyectoEdicionId(proyecto.id);
     setFormData({
-      destino: "",
-      nombre: "",
-      modelo: "",
-      descripcion: "",
-      fotoUrl: "",
-      tipoArticuloCat: "",
-      subcategoriaUso: "",
+      nombre: proyecto.nombre || "",
+      destino: proyecto.destino || "",
+      modelo: proyecto.modelo || "",
+      descripcion: proyecto.descripcion || "",
+      tipoArticuloCat: proyecto.tipoArticuloCat || "",
+      subcategoriaUso: proyecto.subcategoriaUso || "",
+      genero: proyecto.genero || "",
+      clasificacionCalzado: proyecto.clasificacionCalzado || "",
+      fotoUrl: proyecto.fotoUrl || "",
+      nombreArchivo: "",
     });
   };
 
-  // 🚀 FUNCIÓN INTEGRADA CON SUBIDA DE IMAGEN WEBP Y BASE DE DATOS
-  const publicarProyecto = async (archivoFisicoFoto) => {
-    if (!archivoFisicoFoto) {
-      throw new Error("Es obligatorio seleccionar una imagen real.");
-    }
-
+  // Guardar o Actualizar el Registro en FastAPI
+  const publicarProyecto = async (archivoFoto) => {
     setGuardandoRegistro(true);
     try {
-      // 📸 PASO 1: Subir el archivo binario puro a FastAPI para compresión e ir a Supabase Storage
-      const formDataImagen = new FormData();
-      formDataImagen.append("file", archivoFisicoFoto);
+      const dataToSend = new FormData();
+      dataToSend.append("nombre", formData.nombre);
+      dataToSend.append("destino", formData.destino);
+      dataToSend.append("modelo", formData.modelo);
+      dataToSend.append("descripcion", formData.descripcion);
+      dataToSend.append("tipo_articulo", formData.tipoArticuloCat);
+      dataToSend.append("subcategoria", formData.subcategoriaUso);
+      dataToSend.append("genero", formData.genero);
+      dataToSend.append("clasificacion_calzado", formData.clasificacionCalzado);
 
-      const resImagen = await fetch("http://localhost:8000/api/upload-imagen", {
-        method: "POST",
-        body: formDataImagen,
-      });
-
-      if (!resImagen.ok) {
-        throw new Error("Error al procesar y subir la imagen al Storage.");
+      // Si hay un archivo binario nuevo, se envía
+      if (archivoFoto) {
+        dataToSend.append("file", archivoFoto);
       }
 
-      const datosImagen = await resImagen.json();
-      const urlPublicaRealWebp = datosImagen.fotoUrl; // URL definitiva .webp
+      // Determinar la URL y el método HTTP correcto de manera dinámica
+      const url = proyectoEdicionId
+        ? `http://localhost:8000/api/proyectos/${proyectoEdicionId}`
+        : "http://localhost:8000/api/proyectos";
 
-      // 📝 PASO 2: Estructurar el JSON final usando la URL real de la imagen
-      const proyectoParaSupabase = {
-        profile_id: "c20df547-0648-433b-85fe-d1912423a677",
-        destino: formData.destino,
-        nombre: formData.nombre || "Artículo de Vitrina",
-        modelo: formData.modelo || "Genérico",
-        descripcion: formData.descripcion || "",
-        foto_url: urlPublicaRealWebp, // <--- GUARDAMOS LA URL REAL EN LA DB, NO EL BLOB
-        tipo_articulo: formData.tipoArticuloCat || "",
-        subcategoria: formData.subcategoriaUso || "",
-      };
+      const method = proyectoEdicionId ? "PUT" : "POST";
 
-      // 🗄️ PASO 3: Guardar el registro en la tabla de Supabase
-      const res = await fetch("http://localhost:8000/api/proyectos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(proyectoParaSupabase),
+      const response = await fetch(url, {
+        method: method,
+        body: dataToSend, // Al pasar un FormData, el navegador asigna los encabezados multipart automáticamente
       });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        const mensajeBackend =
-          errorData.detail || "Error desconocido en el servidor";
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          typeof mensajeBackend === "object"
-            ? JSON.stringify(mensajeBackend)
-            : mensajeBackend
+          errorData.detail || "Error en la operación con el servidor."
         );
       }
 
-      const respuestaBD = await res.json();
-      return respuestaBD;
-    } finally { // <--- CORREGIDO: Cambiado 'shadow' por 'finally'
+      return await response.json();
+    } catch (error) {
+      console.error("❌ Error en publicarProyecto:", error);
+      throw error;
+    } finally {
       setGuardandoRegistro(false);
+    }
+  };
+
+  // Eliminar un Registro de la BD
+  const eliminarProyecto = async (id, urlFoto) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/proyectos/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          "No se pudo eliminar el artículo del servidor backend."
+        );
+      }
+      return true;
+    } catch (error) {
+      console.error("❌ Error en eliminarProyecto:", error);
+      throw error;
     }
   };
 
@@ -95,9 +123,12 @@ export const usePortfolioForm = () => {
     formData,
     isModalOpen,
     guardandoRegistro,
+    proyectoEdicionId,
     setIsModalOpen,
     handleInputChange,
     resetFormulario,
+    prepararEdicion,
     publicarProyecto,
+    eliminarProyecto,
   };
 };
