@@ -21,7 +21,8 @@ def listar_todos_los_proyectos():  # Síncrono para acoplarse al cliente síncro
 
 # --- 2. SUBIR IMAGEN ---
 @router.post("/upload-imagen")
-async def subir_imagen_a_vitrina(file: UploadFile = File(...)):  # Mantiene async porque usa await file.read()
+# Mantiene async porque usa await file.read()
+async def subir_imagen_a_vitrina(file: UploadFile = File(...)):
     try:
         url_publica = await CatalogoService.procesar_y_subir_imagen(file)
         return {"fotoUrl": url_publica}
@@ -51,12 +52,18 @@ def guardar_o_actualizar_vitrina(proyecto: ProyectoData):
         )
 
 
+# 🛠️ CORREGIDO: Cambiado proyecto_id a int para coincidir con la secuencia de Postgres
+# --- 4. ACTUALIZAR / EDITAR PROYECTO (FILA DINÁMICA) ---
 # --- 4. ACTUALIZAR / EDITAR PROYECTO ---
 @router.put("/proyectos/{proyecto_id}")
-def actualizar_proyecto_vitrina(proyecto_id: str, proyecto: ProyectoData):
+def actualizar_proyecto_vitrina(proyecto_id: int, proyecto: ProyectoData):
     try:
+        # Forzamos a que el modelo acepte los datos. Si llega como booleano en el body,
+        # lo procesamos en el service.py que ya tiene la lógica para convertirlo.
+        datos_dict = proyecto.model_dump()
+        
         datos_actualizados = CatalogoService.actualizar_proyecto(
-            proyecto_id, proyecto.model_dump()
+            proyecto_id, datos_dict
         )
         return {
             "status": "success",
@@ -70,10 +77,10 @@ def actualizar_proyecto_vitrina(proyecto_id: str, proyecto: ProyectoData):
         )
 
 
-# --- 5. ELIMINAR PROYECTO (BORRADO LÓGICO VÍA PATCH) ---
-# Modificado para acoplarse exactamente al fetch de tu React sin cuerpo (Body)
-@router.patch("/proyectos/{proyecto_id}")
-def eliminar_proyecto_vitrina(proyecto_id: str):
+# --- 5. ELIMINAR PROYECTO (CAMBIADO A @router.delete PARA TU REACT) ---
+# Modificado a @router.delete para que coincida exactamente con el fetch de tu React
+@router.delete("/proyectos/{proyecto_id}") 
+def eliminar_proyecto_vitrina(proyecto_id: int): # ◄ Usamos int y delete
     try:
         CatalogoService.eliminar_proyecto_db(proyecto_id)
         return {

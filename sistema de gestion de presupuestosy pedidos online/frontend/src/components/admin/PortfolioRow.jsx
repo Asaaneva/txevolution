@@ -18,9 +18,19 @@ export const PortfolioRow = ({ proyecto, onEliminar, onGuardarCambios }) => {
     }
   };
 
+  // En PortfolioRow.jsx
   const ejecutarGuardadoLocal = async () => {
     try {
-      await onGuardarCambios(proyecto.id, valores);
+      // Forzamos a que use el ID del proyecto original que vino de la base de datos
+      const idCorrecto = proyecto.id;
+
+      if (!idCorrecto) {
+        console.error("❌ El objeto proyecto no tiene un ID válido:", proyecto);
+        alert("Error: No se detecta el ID de este artículo.");
+        return;
+      }
+
+      await onGuardarCambios(idCorrecto, valores);
       setEditando(false);
     } catch (error) {
       console.error(error);

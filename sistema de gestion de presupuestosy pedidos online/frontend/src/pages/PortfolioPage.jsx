@@ -102,21 +102,33 @@ export const PortfolioPage = () => {
 
   const handleGuardarCambiosFila = async (id, camposModificados) => {
     try {
-      await guardarCambiosFilaDirecto(id, camposModificados);
-      await cargarVitrinaDesdeElBackend();
-      alert("¡Cambios guardados correctamente en la fila!");
+      const respuesta = await guardarCambiosFilaDirecto(id, camposModificados);
+      
+      if (respuesta && respuesta.status === "success") {
+        alert("🎉 Cambios guardados dinámicamente.");
+  
+        // 🚀 EN MEMORIA: Buscamos el proyecto en el estado de React y lo actualizamos al instante
+        setProyectos((prevProyectos) =>
+          prevProyectos.map((proyecto) =>
+            proyecto.id === id ? { ...proyecto, ...camposModificados } : proyecto
+          )
+        );
+      }
     } catch (error) {
-      alert(`Error al actualizar fila: ${error.message}`);
-      throw error;
+      alert("No se pudieron consolidar los cambios: " + error.message);
     }
   };
 
   const handleEliminar = async (id) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar este artículo?")) {
       try {
-        await eliminarProyecto(id);
-        alert("🎉 Artículo eliminado correctamente.");
-        await cargarVitrinaDesdeElBackend();
+        // Forzamos el await para esperar que el backend responda con éxito en Supabase
+        const exito = await eliminarProyecto(id);
+
+        if (exito) {
+          alert("🎉 Artículo eliminado correctamente.");
+          await cargarVitrinaDesdeElBackend(); // Rehidrata la tabla inmediatamente
+        }
       } catch (error) {
         alert("Error al eliminar: " + error.message);
       }

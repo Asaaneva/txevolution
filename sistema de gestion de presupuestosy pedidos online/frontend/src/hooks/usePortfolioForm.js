@@ -44,59 +44,57 @@ export const usePortfolioForm = () => {
     });
   };
 
-  // Acción para el botón Publicar/Guardar del formulario principal
+  // ==========================================
+  // 1. PUBLICAR O EDITAR DESDE EL MODAL COMPLETÓ
+  // ==========================================
   const publicarProyecto = async (archivoFoto) => {
     setGuardandoRegistro(true);
     try {
       let urlImagenFinal = formData.fotoUrl;
 
-      // 1. Si el usuario subió un archivo nuevo, lo enviamos primero al bucket
       if (archivoFoto) {
         const bodyImagen = new FormData();
         bodyImagen.append("file", archivoFoto);
 
-        const resImagen = await fetch("http://localhost:8000/upload-imagen", {
-          method: "POST",
-          body: bodyImagen,
-        });
+        const resImagen = await fetch(
+          "http://localhost:8000/api/upload-imagen",
+          {
+            method: "POST",
+            body: bodyImagen,
+          }
+        );
 
-        if (!resImagen.ok)
-          throw new Error("Fallo al subir la imagen al almacén.");
+        if (!resImagen.ok) throw new Error("Fallo al subir la imagen.");
         const dataImagen = await resImagen.json();
-        urlImagenFinal = dataImagen.fotoUrl; // Guardamos el enlace público generado
+        urlImagenFinal = dataImagen.fotoUrl;
       }
 
-      // 2. Construimos el JSON limpio mapeado idénticamente a ProyectoData en Pydantic
+      // Mapeamos los campos al formato snake_case que exige ProyectoData en FastAPI
       const payloadJson = {
-        nombre: formData.nombre,
         destino: formData.destino,
-        modelo: formData.modelo,
+        nombre: formData.nombre || "",
+        modelo: formData.modelo || "",
         descripcion: formData.descripcion || "",
-        tipoArticuloCat: formData.tipoArticuloCat,
-        subcategoriaUso: formData.subcategoriaUso,
-        genero: formData.genero,
-        clasificacionCalzado: formData.clasificacionCalzado,
-        fotoUrl: urlImagenFinal,
+        foto_url: urlImagenFinal || "",
+        tipo_articulo: formData.tipoArticuloCat || "cuero",
+        subcategoria: formData.subcategoriaUso || "",
+        genero: formData.genero || "",
+        clasificacion_calzado: formData.clasificacionCalzado || "",
       };
 
-      // CORREGIDO: Eliminamos el '/api' fantasma de las URLs
       const url = proyectoEdicionId
-        ? `http://localhost:8000/proyectos/${proyectoEdicionId}`
-        : "http://localhost:8000/proyectos";
-
-      const method = proyectoEdicionId ? "PUT" : "POST";
+        ? `http://localhost:8000/api/proyectos/${proyectoEdicionId}`
+        : "http://localhost:8000/api/proyectos";
 
       const response = await fetch(url, {
-        method: method,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        method: proyectoEdicionId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payloadJson),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || "Error al procesar el registro.");
+        throw new Error(errorData.detail || "Error al procesar el proyecto.");
       }
 
       return await response.json();
@@ -108,60 +106,96 @@ export const usePortfolioForm = () => {
     }
   };
 
-  // Guarda los cambios instantáneos cuando editas directamente desde la fila de la tabla
+  // ==========================================
+  // 2. GUARDAR CAMBIOS DIRECTO EN LA FILA
+  // ==========================================
   const guardarCambiosFilaDirecto = async (id, camposModificados) => {
-    setGuardandoRegistro(true);
     try {
-      // CORREGIDO: Enviamos JSON en lugar de FormData para evitar el error 422
-      const response = await fetch(`http://localhost:8000/proyectos/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(camposModificados),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || "Error al actualizar la fila.");
+      if (!id || id === "undefined") {
+        throw new Error(`ID inválido: ${id}`);
       }
 
-      return await response.json();
+      // Molde exacto con guiones bajos que espera tu FastAPI y tu Supabase
+      const payloadJson = {
+        profile_id:
+          camposModificados.profile_id ||
+          "c20df547-0648-433b-85fe-d1912423a677",
+        destino: camposModificados.destino,
+        nombre: camposModificados.nombre || null,
+        modelo: camposModificados.modelo || null,
+        descripcion: camposModificados.descripcion || null,
+        foto_url: camposModificados.fotoUrl || null,
+        tipo_articulo: camposModificados.tipoArticuloCat || null,
+        subcategoria: camposModificados.subcategoriaUso || null,
+        genero: camposModificados.genero || null,
+        clasificacion_calzado: camposModificados.clasificacionCalzado || null,
+        estado: camposModificados.estado || "activo",
+      };
+
+      // 🚨 ELIMINACIÓN CRUCIAL: Limpiamos cualquier rastro de ID dentro del JSON
+      delete payloadJson.id;
+      delete payloadJson._id;
+
+      const res = await fetch(
+        `http://localhost:8000/api/proyectos/${parseInt(id, 10)}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payloadJson),
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        const mensajeLimpio =
+          typeof errorData.detail === "object"
+            ? JSON.stringify(errorData.detail)
+            : errorData.detail;
+        throw new Error(mensajeLimpio || "Error en el servidor local.");
+      }
+
+      return await res.json();
     } catch (error) {
-      console.error("❌ Error en edición rápida:", error);
+      console.error("❌ Error en guardarCambiosFilaDirecto:", error);
       throw error;
-    } finally {
-      setGuardandoRegistro(false);
     }
   };
 
-  // Eliminar proyecto por ID aplicando baja lógica
+  // ==========================================
+  // 3. ELIMINAR PROYECTO (BAJA LÓGICA VÍA DELETE)
+  // ==========================================
   const eliminarProyecto = async (id) => {
     try {
-      if (!id) throw new Error("ID requerido para auditoría.");
+      if (!id) throw new Error("ID requerido para la eliminación.");
 
-      const response = await fetch(`http://localhost:8000/proyectos/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      // 🚨 CORREGIDO: Forzamos la conversión a un número entero limpio en base 10
+      const idNumerico = parseInt(id, 10);
+
+      console.log(
+        "🗑️ Intentando dar de baja el proyecto con ID numérico:",
+        idNumerico
+      );
+
+      // Usamos la variable numérica para construir la URL de FastAPI
+      const response = await fetch(
+        `http://localhost:8000/api/proyectos/${idNumerico}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       if (!response.ok) {
         const datosRespuesta = await response.json().catch(() => ({}));
-        const mensajeLimpio =
-          typeof datosRespuesta.detail === "object"
-            ? JSON.stringify(datosRespuesta.detail)
-            : datosRespuesta.detail;
-
         throw new Error(
-          mensajeLimpio || `Fallo en el servidor (Código ${response.status})`
+          datosRespuesta.detail ||
+            `Error en el servidor (Código ${response.status})`
         );
       }
 
       return true;
     } catch (error) {
-      console.error("❌ Error en el hook al aplicar borrado lógico:", error);
+      console.error("❌ Error al eliminar proyecto:", error);
       throw error;
     }
   };
