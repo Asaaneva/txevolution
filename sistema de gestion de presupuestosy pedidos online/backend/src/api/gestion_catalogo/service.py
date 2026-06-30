@@ -51,30 +51,40 @@ class CatalogoService:
     def consolidar_proyecto(proyecto_dict: dict):
         if "estado" not in proyecto_dict or proyecto_dict["estado"] in [True, "activo"]:
             proyecto_dict["estado"] = "activo"
-
+            
+        # 🚀 Nuevo ID de pruebas asignado automáticamente para pasar el INSERT
+        proyecto_dict["profile_id"] = "c1d8ed43-30f7-49c6-9c15-e5ce6035f310"
+            
         response = supabase.table("proyectos").upsert(proyecto_dict).execute()
         return response.data
 
     @staticmethod
     def actualizar_proyecto(proyecto_id: int, datos_actualizados: dict):
         try:
-            # Limpiamos campos de control para evitar errores de restricción en Postgres
             datos_filtrados = {k: v for k, v in datos_actualizados.items() if v is not None}
             if "id" in datos_filtrados:
                 del datos_filtrados["id"]
-            if "created_at" in datos_filtrados:
-                del datos_filtrados["created_at"]
 
-            # Ejecutamos la actualización directa
+            if "estado" in datos_filtrados:
+                if datos_filtrados["estado"] is True:
+                    datos_filtrados["estado"] = "activo"
+                elif datos_filtrados["estado"] is False:
+                    datos_filtrados["estado"] = "inactivo"
+
+            # 🚀 Nuevo ID de pruebas asignado automáticamente para pasar el UPDATE
+            datos_filtrados["profile_id"] = "c1d8ed43-30f7-49c6-9c15-e5ce6035f310"
+
             response = (
                 supabase.table("proyectos")
                 .update(datos_filtrados)
-                .eq("id", int(proyecto_id)) # ◄ Forzamos a entero primitivo
+                .eq("id", proyecto_id)
                 .execute()
             )
             
-            # Con el permiso 'ALL' activo, Supabase devolverá la fila modificada
-            return response.data if response.data else {"status": "success", "message": "Fila actualizada"}
+            if not response.data:
+                raise Exception(f"No se encontró el registro con ID {proyecto_id} para modificar.")
+                
+            return response.data[0]
         except Exception as e:
             print(f"❌ Error en CatalogoService al actualizar: {str(e)}")
             raise HTTPException(

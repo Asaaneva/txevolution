@@ -33,48 +33,45 @@ async def subir_imagen_a_vitrina(file: UploadFile = File(...)):
         )
 
 
-# --- 3. CREAR PROYECTO ---
-@router.post("/proyectos")
+# --- 3. CREAR PROYECTO (POST) ---
+@router.post("/proyectos") # ◄ IMPORTANTE: Asegúrate de que NO tenga 'response_model=ProyectoData'
 def guardar_o_actualizar_vitrina(proyecto: ProyectoData):
     try:
         datos_guardados = CatalogoService.consolidar_proyecto(
             proyecto.model_dump()
         )
+        # Retornamos el objeto directo. FastAPI lo procesará como JSON libre
         return {
             "status": "success",
-            "message": "Datos de vitrina consolidados",
+            "message": "Datos de vitrina consolidados con éxito",
             "data": datos_guardados
         }
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error base de datos TXevolution: {str(e)}"
         )
 
 
-# 🛠️ CORREGIDO: Cambiado proyecto_id a int para coincidir con la secuencia de Postgres
-# --- 4. ACTUALIZAR / EDITAR PROYECTO (FILA DINÁMICA) ---
-# --- 4. ACTUALIZAR / EDITAR PROYECTO ---
-@router.put("/proyectos/{proyecto_id}")
+# --- 4. ACTUALIZAR / EDITAR PROYECTO (PUT) ---
+@router.put("/proyectos/{proyecto_id}") # ◄ IMPORTANTE: Asegúrate de que NO tenga 'response_model=ProyectoData'
 def actualizar_proyecto_vitrina(proyecto_id: int, proyecto: ProyectoData):
     try:
-        # Forzamos a que el modelo acepte los datos. Si llega como booleano en el body,
-        # lo procesamos en el service.py que ya tiene la lógica para convertirlo.
-        datos_dict = proyecto.model_dump()
-        
         datos_actualizados = CatalogoService.actualizar_proyecto(
-            proyecto_id, datos_dict
+            proyecto_id, proyecto.model_dump()
         )
         return {
             "status": "success",
-            "message": "Proyecto actualizado",
+            "message": "Proyecto actualizado con éxito",
             "data": datos_actualizados
         }
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error al actualizar proyecto: {str(e)}"
         )
+
+
 
 
 # --- 5. ELIMINAR PROYECTO (CAMBIADO A @router.delete PARA TU REACT) ---
