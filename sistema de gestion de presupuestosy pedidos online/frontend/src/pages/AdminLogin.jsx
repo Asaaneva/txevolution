@@ -1,146 +1,31 @@
-// src/pages/public/Login.jsx
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
+import React, { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+import { useAdminAuth } from "../hooks/useAdminAuth";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 
-export const Login = () => {
-  const navigate = useNavigate(); // 👈 AGREGA ESTA LÍNEA
+export const AdminLogin = () => {
+  const { login } = useContext(AuthContext); // Inyector global de sesión en memoria
 
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [focusedField, setFocusedField] = useState("");
-  const [attemptsLeft, setAttemptsLeft] = useState(3);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [shakeField, setShakeField] = useState({
-    email: false,
-    password: false,
-  });
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) {
-      setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
-    }
-  };
-
-  const triggerShake = (fieldName) => {
-    setShakeField((prev) => ({ ...prev, [fieldName]: true }));
-    setTimeout(() => {
-      setShakeField((prev) => ({ ...prev, [fieldName]: false }));
-    }, 500);
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordRegex =
-      /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d\.,\*@#\$%\^&\+=\!]{8,}$/;
-
-    if (!formData.email.trim()) {
-      newErrors.email = "El correo electrónico es obligatorio para el acceso.";
-      triggerShake("email");
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = "El formato del correo no es válido.";
-      triggerShake("email");
-    }
-
-    if (!formData.password) {
-      newErrors.password = "La contraseña es obligatoria.";
-      triggerShake("password");
-    } else if (formData.password.length < 8) {
-      newErrors.password =
-        "Contraseña insegura. Debe contener mínimo 8 caracteres.";
-      triggerShake("password");
-    } else if (!passwordRegex.test(formData.password)) {
-      newErrors.password =
-        "La estructura debe contener al menos letras y números.";
-      triggerShake("password");
-    }
-    return newErrors;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (attemptsLeft <= 0) {
-      setErrorMessage(
-        "Acceso bloqueado. Demasiados intentos fallidos. Intenta más tarde."
-      );
-      return;
-    }
-
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    setIsSubmitting(true);
-    setErrorMessage("");
-
-    try {
-      const urlFinal = `${import.meta.env.VITE_API_URL}/login`;
-      const response = await fetch(urlFinal, {
-        method: "POST",
-        mode: "cors",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.status === 401) {
-        const nextAttempts = attemptsLeft - 1;
-        setAttemptsLeft(nextAttempts);
-        setErrorMessage(
-          nextAttempts <= 0
-            ? "Has agotado tus 3 intentos. Acceso bloqueado temporalmente."
-            : `Credenciales inválidas. Te quedan ${nextAttempts} intentos.`
-        );
-        return;
-      }
-
-      if (response.status === 403) {
-        setErrorMessage(
-          data.detail || "Acceso denegado: Se requieren permisos de ADMIN."
-        );
-        return;
-      }
-
-      if (!response.ok) throw new Error("Error en la respuesta del servidor");
-
-      if (data.access_token) localStorage.setItem("token", data.access_token);
-      localStorage.setItem("isAuthenticated", "true");
-
-      // Guardamos el nombre del usuario para mostrarlo en el Dashboard
-      localStorage.setItem("userName", data.user_name || "Administrador");
-      // 3. Redirigimos de inmediato al Dashboard
-      navigate("/dashboard");
-    } catch (error) {
-      setErrorMessage(
-        "Error de red o comunicación con el servidor. Verifica tu conexión."
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // Consumimos toda la inteligencia interactiva desde el custom hook controlador
+  const {
+    formData,
+    errors,
+    showPassword,
+    isSubmitting,
+    focusedField,
+    attemptsLeft,
+    errorMessage,
+    shakeField,
+    setShowPassword,
+    setFocusedField,
+    handleChange,
+    handleSubmit,
+  } = useAdminAuth(login);
 
   return (
     <div className="app-grid-container select-none">
-      <Header />
-
       <main className="main-content">
         <h1
           className="font-normal text-gray-900 mb-6 tracking-tight text-center"
@@ -162,7 +47,6 @@ export const Login = () => {
                 onSubmit={handleSubmit}
                 className="w-full flex flex-col gap-6"
               >
-                {/* INPUT DE CORREO MODULARIZADO */}
                 <Input
                   label="Correo"
                   type="text"
@@ -179,7 +63,6 @@ export const Login = () => {
                   helperText="💡 Introduzca su correo electrónico registrado."
                 />
 
-                {/* INPUT DE CONTRASEÑA MODULARIZADO */}
                 <Input
                   label="Contraseña"
                   type={showPassword ? "text" : "password"}
@@ -253,7 +136,6 @@ export const Login = () => {
                   )}
                 />
 
-                {/* ALERTAS Y BOTÓN MODULAR */}
                 <div className="flex flex-col gap-4 w-full mt-2">
                   {errorMessage && (
                     <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg text-center font-medium shadow-sm animate-fade-in">
@@ -276,13 +158,12 @@ export const Login = () => {
                   </Button>
                 </div>
 
-                {/* ENLACES AL PIE */}
                 <div className="flex justify-center gap-8 text-xs font-normal text-gray-500 pt-3 text-center w-full border-t border-slate-100 mt-2">
                   <a
                     href="#forgot"
                     className="hover:text-slate-900 hover:underline transition-colors"
                   >
-                    ¿Olvió su contraseña?
+                    ¿Olvidó su contraseña?
                   </a>
                   <a
                     href="#register"
@@ -296,10 +177,8 @@ export const Login = () => {
           </Card>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };
 
-export default Login;
+export default AdminLogin;
