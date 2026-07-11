@@ -92,7 +92,6 @@ sistema_de_gestion_de_presupuestos_y_pedidos_online/
 │
 └── 📝 README.md                # DOCUMENTACIÓN TÉCNICA
 ```
-****me encuentro 
 
 
 
