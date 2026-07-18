@@ -12,7 +12,7 @@ app = FastAPI(title=settings.PROJECT_NAME)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://jubilant-meme-x5v6wgpw5qp9f65w5-5173.app.github.dev"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

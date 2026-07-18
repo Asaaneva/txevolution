@@ -57,7 +57,7 @@ export const usePortfolioForm = () => {
         bodyImagen.append("file", archivoFoto);
 
         const resImagen = await fetch(
-          "http://localhost:8000/api/upload-imagen",
+          `${import.meta.env.VITE_API_URL}/api/upload-imagen`,
           {
             method: "POST",
             body: bodyImagen,
@@ -83,8 +83,9 @@ export const usePortfolioForm = () => {
       };
 
       const url = proyectoEdicionId
-        ? `http://localhost:8000/api/proyectos/${proyectoEdicionId}`
-        : "http://localhost:8000/api/proyectos";
+      ? `${import.meta.env.VITE_API_URL}/api/proyectos/${proyectoEdicionId}`
+      : `${import.meta.env.VITE_API_URL}/api/proyectos`;
+
 
       const response = await fetch(url, {
         method: proyectoEdicionId ? "PUT" : "POST",
@@ -137,13 +138,13 @@ export const usePortfolioForm = () => {
       delete payloadJson._id;
 
       const res = await fetch(
-        `http://localhost:8000/api/proyectos/${parseInt(id, 10)}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payloadJson),
-        }
-      );
+      `${import.meta.env.VITE_API_URL}/api/proyectos/${parseInt(id, 10)}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payloadJson),
+      }
+      );;
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
@@ -178,7 +179,7 @@ export const usePortfolioForm = () => {
 
       // Usamos la variable numérica para construir la URL de FastAPI
       const response = await fetch(
-        `http://localhost:8000/api/proyectos/${idNumerico}`,
+        `${import.meta.env.VITE_API_URL}/api/proyectos/${idNumerico}`,
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },

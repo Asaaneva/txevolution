@@ -25,8 +25,8 @@ export const PortfolioPage = () => {
 
   const cargarVitrinaDesdeElBackend = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/proyectos");
-      if (!res.ok)
+const res = await fetch(`${import.meta.env.VITE_API_URL}/api/proyectos`);    
+  if (!res.ok)
         throw new Error("No se pudo conectar con el servidor central.");
       const datosBD = await res.json();
 
