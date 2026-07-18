@@ -3,8 +3,13 @@ uvicorn[standard]
 supabase
 python-dotenv
 sqlalchemy
+sqlmodel
 psycopg2-binary
 pydantic[email]
 pydantic-settings
 Pillow==10.3.0
 python-multipart==0.0.24
+passlib==1.7.4
+bcrypt==4.2.0
+
+

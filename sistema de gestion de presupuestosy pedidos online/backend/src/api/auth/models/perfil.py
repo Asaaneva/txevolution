@@ -1,9 +1,9 @@
 from datetime import datetime, timezone
 from typing import Optional
 from sqlmodel import Field, Relationship, SQLModel
-# Importamos las clases para que Python entienda las llaves foráneas
-from app.apps.auth.models.usuario import Usuario
-from app.apps.auth.models.rol import Rol
+from src.api.auth.models.usuario import Usuario
+from src.api.auth.models.rol import Rol
+
 
 class UserProfile(SQLModel, table=True):
     __tablename__ = "perfiles"

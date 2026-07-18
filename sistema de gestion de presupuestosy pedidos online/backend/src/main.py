@@ -18,10 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# =================================================================
-# 3. CONECTAR CONTENEDORES MAESTROS (Escalabilidad garantizada)
-# =================================================================
-# Importamos después de instanciar 'app' para evitar bloqueos circulares
+
 from src.api.router import api_router, auth_router
 
 app.include_router(api_router)   # Controla /api/proyectos y /api/upload-imagen
