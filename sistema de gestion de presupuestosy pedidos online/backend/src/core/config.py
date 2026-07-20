@@ -9,13 +9,13 @@ class Settings:
     PROJECT_NAME: str = "Portal Gestión Cuero"
     SUPABASE_URL: str = os.getenv("SUPABASE_URL")
     SUPABASE_KEY: str = os.getenv("SUPABASE_KEY")
-    
-    # =========================================================================
-    # ⚡ LA LÍNEA FALTA: Le enseñamos a tu objeto settings a leer la URL agnóstica
-    # =========================================================================
     DATABASE_URL: str = os.getenv("DATABASE_URL")
 
 settings = Settings()
 
-# Se mantiene tu instancia global intacta para los módulos que aún la necesiten
+# 🕵️‍♀️ DIAGNÓSTICO EN TIEMPO REAL: Verás este cuadro en la consola de Docker
+print("====================================================")
+print(f"DEBUG DOCKER - URL CONEXIÓN: {settings.DATABASE_URL}")
+print("====================================================")
+
 supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)

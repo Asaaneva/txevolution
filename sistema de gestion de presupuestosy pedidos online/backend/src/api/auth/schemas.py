@@ -9,9 +9,7 @@ from typing import Optional
 class UsuarioRegistro(BaseModel):
     correo_electronico: EmailStr  # Valida sintaxis de email (ej: usuario@correo.com)
     contrasena: str               # Contraseña en texto plano que digita el usuario
-    full_name: str
-    foto: Optional[str] = None    # URL de la imagen del perfil (opcional)
-
+    full_name: str                # Nombre completo del usuario
 
 # =========================================================================
 # 2. ESQUEMA DE LOGIN (Contrato de Acceso)

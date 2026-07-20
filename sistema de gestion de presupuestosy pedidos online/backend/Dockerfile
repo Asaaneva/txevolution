@@ -19,8 +19,8 @@ COPY . .
 # Comando clave: Agregamos la raíz al PYTHONPATH para que las importaciones de "src" funcionen
 ENV PYTHONPATH=/app
 
-EXPOSE 8000
+EXPOSE 8080
 
 # Apuntamos exactamente a la ruta interna de tu archivo main.py
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
 

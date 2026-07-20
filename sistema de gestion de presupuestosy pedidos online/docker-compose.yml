@@ -1,14 +1,25 @@
+# docker-compose.yml
 services:
   backend:
     build:
       context: "./backend"
+    # =========================================================================
+    # ⚡ EL PUENTE DE PUERTOS: Tu PC (8000) -> Tu .env de Python (8080)
+    # =========================================================================
     ports:
-      - "8000:8000"
-    # 🔐 Al estar ya dentro de la carpeta, la ruta al .env es directa:
+      - "8000:8080"  
     env_file:
       - "./backend/.env"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
       - PYTHONUNBUFFERED=1
+      # 🚀 Forzamos a Uvicorn a abrir todas las interfaces de red para salir de Docker
+      - HOST=0.0.0.0
+      - PORT=8080
+
+
 
   frontend:
     build:
