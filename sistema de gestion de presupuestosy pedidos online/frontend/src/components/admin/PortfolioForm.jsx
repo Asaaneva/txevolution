@@ -131,20 +131,28 @@ export const PortfolioForm = ({
         </div>
 
         {/* Columna Derecha: Carga de Foto y Botón */}
-        <div className="flex flex-col justify-between gap-6">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">
-              Fotografía de Vitrina
-            </label>
-            <ComponenteCargaFoto
-              fotoUrl={formData.fotoUrl}
-              onFotoCambiada={(nuevaUrl) =>
-                registrarCambio("fotoUrl", nuevaUrl)
-              }
-              onFotoRemovida={() => registrarCambio("fotoUrl", "")}
-              hasError={errores.fotoUrl}
-            />
-          </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">
+            Fotografía de Vitrina
+          </label>
+          <ComponenteCargaFoto
+            fotoUrl={formData.fotoUrl}//createObjectURL(file)transforma el archivo local a rutatipo blob
+            nombreArchivo={formData.fotoNombre}
+            onFotoCambiada={(file) => {
+              // 1. Creamos la URL temporal para que la etiqueta <img> la pueda mostrar sin romperse
+              const urlTemporal = URL.createObjectURL(file);
+              registrarCambio("fotoUrl", urlTemporal);
+              registrarCambio("fotoNombre", file.name);
+              
+              //  Opcional: si tu función registrarCambio limpia errores automáticamente, genial. 
+              // Si no, asegúrate de que al cambiar la foto se limpie el error de fotoUrl.
+            }}
+            onFotoRemovida={() => {
+              registrarCambio("fotoUrl", "");
+              registrarCambio("fotoNombre", "");
+            }}
+            hasError={errores.fotoUrl}
+          />
           <button
             type="submit"
             className="w-full py-2.5 bg-amber-800 text-white font-bold text-xs rounded-lg hover:bg-amber-900 transition-colors shadow-xs mt-auto cursor-pointer"

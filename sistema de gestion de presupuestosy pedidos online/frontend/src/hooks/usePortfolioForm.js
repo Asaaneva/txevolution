@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { proyectoService } from "../services/proyectoService";
 
 const VALORES_INICIALES = {
   nombre: "",
@@ -15,22 +16,94 @@ const VALORES_INICIALES = {
 export const usePortfolioForm = () => {
   const [formData, setFormData] = useState(VALORES_INICIALES);
   const [guardandoRegistro, setGuardandoRegistro] = useState(false);
-
-  // Estados complementarios para la interfaz
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [proyectoEdicionId, setProyectoEdicionId] = useState(null);
+  const [errores, setErrores] = useState({});
 
-  const handleInputChange = (campo, valor) => {
+  // 📸 Estado para guardar el archivo físico real que se enviará al backend
+  const [archivoFisicoReal, setArchivoFisicoReal] = useState(null);
+
+  const registrarCambio = (campo, valor) => {
     setFormData((prev) => ({ ...prev, [campo]: valor }));
+    if (errores[campo]) {
+      setErrores((prev) => ({ ...prev, [campo]: false }));
+    }
+  };
+
+  // 📸 Función especial para manejar cuando el usuario selecciona una foto local
+  const manejarCambioFoto = (file) => {
+    if (!file) return;
+
+    // 1. Creamos una URL temporal para que la validación y la mini preview funcionen al instante
+    const urlTemporal = URL.createObjectURL(file);
+
+    // 2. Guardamos el archivo físico real para enviarlo luego a FastAPI
+    setArchivoFisicoReal(file);
+
+    // 3. Actualizamos formData.fotoUrl para que el validador dé luz verde
+    setFormData((prev) => ({ ...prev, fotoUrl: urlTemporal }));
+
+    if (errores.fotoUrl) {
+      setErrores((prev) => ({ ...prev, fotoUrl: false }));
+    }
+  };
+
+  const validarFormulario = () => {
+    const nuevosErrores = {};
+
+    if (!formData.destino) {
+      nuevosErrores.destino = true;
+    }
+
+    if (formData.destino === "index" || formData.destino === "categoria") {
+      if (!formData.tipoArticuloCat) nuevosErrores.tipoArticuloCat = true;
+      if (!formData.subcategoriaUso) nuevosErrores.subcategoriaUso = true;
+
+      if (
+        formData.subcategoriaUso === "Zapatos" &&
+        !formData.clasificacionCalzado
+      ) {
+        nuevosErrores.clasificacionCalzado = true;
+      }
+    }
+
+    if (formData.destino === "producto") {
+      if (!formData.nombre?.trim()) nuevosErrores.nombre = true;
+      if (!formData.modelo?.trim()) nuevosErrores.modelo = true;
+    }
+
+    // 🛡️ Validamos directamente contra formData.fotoUrl (que ya tendrá la URL temporal o texto)
+    if (!formData.fotoUrl) {
+      nuevosErrores.fotoUrl = true;
+    }
+
+    setErrores(nuevosErrores);
+    return nuevosErrores;
+  };
+
+  const handleVerVistaPrevia = (e) => {
+    if (e && typeof e.preventDefault === "function") e.preventDefault();
+
+    const errs = validarFormulario();
+
+    if (Object.keys(errs).length > 0) {
+      return false;
+    }
+
+    return true;
   };
 
   const resetFormulario = () => {
     setFormData(VALORES_INICIALES);
     setProyectoEdicionId(null);
+    setArchivoFisicoReal(null); // Limpiamos el archivo físico
+    setErrores({});
   };
 
   const prepararEdicion = (proyecto) => {
     setProyectoEdicionId(proyecto.id);
+    setArchivoFisicoReal(null);
+    setErrores({});
     setFormData({
       nombre: proyecto.nombre || "",
       destino: proyecto.destino || "",
@@ -44,32 +117,23 @@ export const usePortfolioForm = () => {
     });
   };
 
-  // ==========================================
-  // 1. PUBLICAR O EDITAR DESDE EL MODAL COMPLETÓ
-  // ==========================================
-  const publicarProyecto = async (archivoFoto) => {
+  const publicarProyecto = async () => {
     setGuardandoRegistro(true);
     try {
       let urlImagenFinal = formData.fotoUrl;
 
-      if (archivoFoto) {
-        const bodyImagen = new FormData();
-        bodyImagen.append("file", archivoFoto);
-
-        const resImagen = await fetch(
-          "https://fuzzy-couscous-pjpvr5wrj675f7xw6-8000.app.github.dev/api/upload-imagen",
-          {
-            method: "POST",
-            body: bodyImagen,
-          }
+      // Si el usuario seleccionó un archivo físico nuevo de su PC, lo subimos al backend primero
+      if (archivoFisicoReal) {
+        const respuestaSubida = await proyectoService.subirImagen(
+          archivoFisicoReal
         );
-
-        if (!resImagen.ok) throw new Error("Fallo al subir la imagen.");
-        const dataImagen = await resImagen.json();
-        urlImagenFinal = dataImagen.fotoUrl;
+        urlImagenFinal =
+          respuestaSubida.fotoUrl ||
+          respuestaSubida.foto_url ||
+          respuestaSubida.url ||
+          urlImagenFinal;
       }
 
-      // Mapeamos los campos al formato snake_case que exige ProyectoData en FastAPI
       const payloadJson = {
         destino: formData.destino,
         nombre: formData.nombre || "",
@@ -82,22 +146,11 @@ export const usePortfolioForm = () => {
         clasificacion_calzado: formData.clasificacionCalzado || "",
       };
 
-      const url = proyectoEdicionId
-        ? `https://fuzzy-couscous-pjpvr5wrj675f7xw6-8000.app.github.dev/api/proyectos/api/proyectos/${proyectoEdicionId}`
-        : "https://fuzzy-couscous-pjpvr5wrj675f7xw6-8000.app.github.dev/api/proyectos/api/proyectos";
-
-      const response = await fetch(url, {
-        method: proyectoEdicionId ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payloadJson),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || "Error al procesar el proyecto.");
+      if (proyectoEdicionId) {
+        return await proyectoService.actualizar(proyectoEdicionId, payloadJson);
+      } else {
+        return await proyectoService.crear(payloadJson);
       }
-
-      return await response.json();
     } catch (error) {
       console.error("❌ Error al publicar proyecto:", error);
       throw error;
@@ -106,16 +159,10 @@ export const usePortfolioForm = () => {
     }
   };
 
-  // ==========================================
-  // 2. GUARDAR CAMBIOS DIRECTO EN LA FILA
-  // ==========================================
   const guardarCambiosFilaDirecto = async (id, camposModificados) => {
     try {
-      if (!id || id === "undefined") {
-        throw new Error(`ID inválido: ${id}`);
-      }
+      if (!id || id === "undefined") throw new Error(`ID inválido: ${id}`);
 
-      // Molde exacto con guiones bajos que espera tu FastAPI y tu Supabase
       const payloadJson = {
         profile_id:
           camposModificados.profile_id ||
@@ -132,68 +179,20 @@ export const usePortfolioForm = () => {
         estado: camposModificados.estado || "activo",
       };
 
-      // 🚨 ELIMINACIÓN CRUCIAL: Limpiamos cualquier rastro de ID dentro del JSON
       delete payloadJson.id;
       delete payloadJson._id;
 
-      const res = await fetch(
-        `https://fuzzy-couscous-pjpvr5wrj675f7xw6-8000.app.github.dev/api/proyectos/api/proyectos/${parseInt(id, 10)}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payloadJson),
-        }
-      );
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        const mensajeLimpio =
-          typeof errorData.detail === "object"
-            ? JSON.stringify(errorData.detail)
-            : errorData.detail;
-        throw new Error(mensajeLimpio || "Error en el servidor local.");
-      }
-
-      return await res.json();
+      return await proyectoService.actualizar(id, payloadJson);
     } catch (error) {
       console.error("❌ Error en guardarCambiosFilaDirecto:", error);
       throw error;
     }
   };
 
-  // ==========================================
-  // 3. ELIMINAR PROYECTO (BAJA LÓGICA VÍA DELETE)
-  // ==========================================
   const eliminarProyecto = async (id) => {
     try {
       if (!id) throw new Error("ID requerido para la eliminación.");
-
-      // 🚨 CORREGIDO: Forzamos la conversión a un número entero limpio en base 10
-      const idNumerico = parseInt(id, 10);
-
-      console.log(
-        "🗑️ Intentando dar de baja el proyecto con ID numérico:",
-        idNumerico
-      );
-
-      // Usamos la variable numérica para construir la URL de FastAPI
-      const response = await fetch(
-        `https://fuzzy-couscous-pjpvr5wrj675f7xw6-8000.app.github.dev/api/proyectos/api/proyectos/${idNumerico}`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-
-      if (!response.ok) {
-        const datosRespuesta = await response.json().catch(() => ({}));
-        throw new Error(
-          datosRespuesta.detail ||
-            `Error en el servidor (Código ${response.status})`
-        );
-      }
-
-      return true;
+      return await proyectoService.eliminar(id);
     } catch (error) {
       console.error("❌ Error al eliminar proyecto:", error);
       throw error;
@@ -205,8 +204,13 @@ export const usePortfolioForm = () => {
     isModalOpen,
     guardandoRegistro,
     proyectoEdicionId,
+    errores,
+    archivoFisicoReal,
+    validarFormulario,
     setIsModalOpen,
-    handleInputChange,
+    registrarCambio,
+    manejarCambioFoto, // 👈 Conectada para tu componente de carga de foto
+    handleVerVistaPrevia,
     resetFormulario,
     prepararEdicion,
     publicarProyecto,
