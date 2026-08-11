@@ -4,7 +4,6 @@ services:
       context: "./backend"
     ports:
       - "8000:8000"
-    # 🔐 Al estar ya dentro de la carpeta, la ruta al .env es directa:
     env_file:
       - "./backend/.env"
     environment:
@@ -18,4 +17,5 @@ services:
     volumes:
       - "./frontend:/app"
       - "/app/node_modules"
-
+    env_file:
+      - "./frontend/.env"

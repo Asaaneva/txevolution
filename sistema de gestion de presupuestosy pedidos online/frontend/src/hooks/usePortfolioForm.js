@@ -57,7 +57,7 @@ export const usePortfolioForm = () => {
         bodyImagen.append("file", archivoFoto);
 
         const resImagen = await fetch(
-          "http://localhost:8000/api/upload-imagen",
+          "https://fuzzy-couscous-pjpvr5wrj675f7xw6-8000.app.github.dev/api/upload-imagen",
           {
             method: "POST",
             body: bodyImagen,
@@ -83,8 +83,8 @@ export const usePortfolioForm = () => {
       };
 
       const url = proyectoEdicionId
-        ? `http://localhost:8000/api/proyectos/${proyectoEdicionId}`
-        : "http://localhost:8000/api/proyectos";
+        ? `https://fuzzy-couscous-pjpvr5wrj675f7xw6-8000.app.github.dev/api/proyectos/api/proyectos/${proyectoEdicionId}`
+        : "https://fuzzy-couscous-pjpvr5wrj675f7xw6-8000.app.github.dev/api/proyectos/api/proyectos";
 
       const response = await fetch(url, {
         method: proyectoEdicionId ? "PUT" : "POST",
@@ -137,7 +137,7 @@ export const usePortfolioForm = () => {
       delete payloadJson._id;
 
       const res = await fetch(
-        `http://localhost:8000/api/proyectos/${parseInt(id, 10)}`,
+        `https://fuzzy-couscous-pjpvr5wrj675f7xw6-8000.app.github.dev/api/proyectos/api/proyectos/${parseInt(id, 10)}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -178,7 +178,7 @@ export const usePortfolioForm = () => {
 
       // Usamos la variable numérica para construir la URL de FastAPI
       const response = await fetch(
-        `http://localhost:8000/api/proyectos/${idNumerico}`,
+        `https://fuzzy-couscous-pjpvr5wrj675f7xw6-8000.app.github.dev/api/proyectos/api/proyectos/${idNumerico}`,
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },

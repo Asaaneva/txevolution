@@ -6,13 +6,14 @@ from fastapi.openapi.utils import get_openapi
 
 # 1. CARGAR CONFIGURACIÓN CENTRAL
 from src.core.config import settings, supabase
+allow_origins=["http://localhost:5173","https://fuzzy-couscous-pjpvr5wrj675f7xw6-5173.app.github.dev"];
 
 # 2. INICIALIZACIÓN DE LA APP
 app = FastAPI(title=settings.PROJECT_NAME)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -1,6 +1,8 @@
+const API_URL = import.meta.env.VITE_API_URL || "https://fuzzy-couscous-pjpvr5wrj675f7xw6-8000.app.github.dev";
+
 export const authService = {
   async iniciarSesion(email, password) {
-    const urlFinal = `${import.meta.env.VITE_API_URL}/login`;
+    const urlFinal = `${API_URL}/login`;
 
     const response = await fetch(urlFinal, {
       method: "POST",
