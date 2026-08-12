@@ -1,5 +1,7 @@
+// src/hooks/usePortfolioForm.js
 import { useState } from "react";
 import { proyectoService } from "../services/proyectoService";
+import { validarFormularioPortfolio } from "../utils/portfolioValidations";
 
 const VALORES_INICIALES = {
   nombre: "",
@@ -13,14 +15,14 @@ const VALORES_INICIALES = {
   fotoUrl: "",
 };
 
+const PROFILE_ID_DEFAULT = "c20df547-0648-433b-85fe-d1912423a677";
+
 export const usePortfolioForm = () => {
   const [formData, setFormData] = useState(VALORES_INICIALES);
   const [guardandoRegistro, setGuardandoRegistro] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [proyectoEdicionId, setProyectoEdicionId] = useState(null);
   const [errores, setErrores] = useState({});
-
-  // 📸 Estado para guardar el archivo físico real que se enviará al backend
   const [archivoFisicoReal, setArchivoFisicoReal] = useState(null);
 
   const registrarCambio = (campo, valor) => {
@@ -30,73 +32,32 @@ export const usePortfolioForm = () => {
     }
   };
 
-  // 📸 Función especial para manejar cuando el usuario selecciona una foto local
   const manejarCambioFoto = (file) => {
     if (!file) return;
-
-    // 1. Creamos una URL temporal para que la validación y la mini preview funcionen al instante
     const urlTemporal = URL.createObjectURL(file);
-
-    // 2. Guardamos el archivo físico real para enviarlo luego a FastAPI
     setArchivoFisicoReal(file);
-
-    // 3. Actualizamos formData.fotoUrl para que el validador dé luz verde
     setFormData((prev) => ({ ...prev, fotoUrl: urlTemporal }));
-
     if (errores.fotoUrl) {
       setErrores((prev) => ({ ...prev, fotoUrl: false }));
     }
   };
 
   const validarFormulario = () => {
-    const nuevosErrores = {};
-
-    if (!formData.destino) {
-      nuevosErrores.destino = true;
-    }
-
-    if (formData.destino === "index" || formData.destino === "categoria") {
-      if (!formData.tipoArticuloCat) nuevosErrores.tipoArticuloCat = true;
-      if (!formData.subcategoriaUso) nuevosErrores.subcategoriaUso = true;
-
-      if (
-        formData.subcategoriaUso === "Zapatos" &&
-        !formData.clasificacionCalzado
-      ) {
-        nuevosErrores.clasificacionCalzado = true;
-      }
-    }
-
-    if (formData.destino === "producto") {
-      if (!formData.nombre?.trim()) nuevosErrores.nombre = true;
-      if (!formData.modelo?.trim()) nuevosErrores.modelo = true;
-    }
-
-    // 🛡️ Validamos directamente contra formData.fotoUrl (que ya tendrá la URL temporal o texto)
-    if (!formData.fotoUrl) {
-      nuevosErrores.fotoUrl = true;
-    }
-
-    setErrores(nuevosErrores);
-    return nuevosErrores;
+    const errs = validarFormularioPortfolio(formData);
+    setErrores(errs);
+    return errs;
   };
 
   const handleVerVistaPrevia = (e) => {
     if (e && typeof e.preventDefault === "function") e.preventDefault();
-
     const errs = validarFormulario();
-
-    if (Object.keys(errs).length > 0) {
-      return false;
-    }
-
-    return true;
+    return Object.keys(errs).length === 0;
   };
 
   const resetFormulario = () => {
     setFormData(VALORES_INICIALES);
     setProyectoEdicionId(null);
-    setArchivoFisicoReal(null); // Limpiamos el archivo físico
+    setArchivoFisicoReal(null);
     setErrores({});
   };
 
@@ -117,34 +78,35 @@ export const usePortfolioForm = () => {
     });
   };
 
+  const obtenerUrlImagenFinal = async () => {
+    if (!archivoFisicoReal) return formData.fotoUrl;
+    const respuestaSubida = await proyectoService.subirImagen(archivoFisicoReal);
+    return (
+      respuestaSubida.fotoUrl ||
+      respuestaSubida.foto_url ||
+      respuestaSubida.url ||
+      formData.fotoUrl
+    );
+  };
+
+  const construirPayload = (urlImagenFinal) => ({
+    profile_id: PROFILE_ID_DEFAULT,
+    destino: formData.destino,
+    nombre: formData.nombre || null,
+    modelo: formData.modelo || null,
+    descripcion: formData.descripcion || null,
+    foto_url: urlImagenFinal || null,
+    tipo_articulo: formData.tipoArticuloCat || null,
+    subcategoria: formData.subcategoriaUso || null,
+    genero: formData.genero || null,
+    clasificacion_calzado: formData.clasificacionCalzado || null,
+  });
+
   const publicarProyecto = async () => {
     setGuardandoRegistro(true);
     try {
-      let urlImagenFinal = formData.fotoUrl;
-
-      // Si el usuario seleccionó un archivo físico nuevo de su PC, lo subimos al backend primero
-      if (archivoFisicoReal) {
-        const respuestaSubida = await proyectoService.subirImagen(
-          archivoFisicoReal
-        );
-        urlImagenFinal =
-          respuestaSubida.fotoUrl ||
-          respuestaSubida.foto_url ||
-          respuestaSubida.url ||
-          urlImagenFinal;
-      }
-
-      const payloadJson = {
-        destino: formData.destino,
-        nombre: formData.nombre || "",
-        modelo: formData.modelo || "",
-        descripcion: formData.descripcion || "",
-        foto_url: urlImagenFinal || "",
-        tipo_articulo: formData.tipoArticuloCat || "cuero",
-        subcategoria: formData.subcategoriaUso || "",
-        genero: formData.genero || "",
-        clasificacion_calzado: formData.clasificacionCalzado || "",
-      };
+      const urlImagenFinal = await obtenerUrlImagenFinal();
+      const payloadJson = construirPayload(urlImagenFinal);
 
       if (proyectoEdicionId) {
         return await proyectoService.actualizar(proyectoEdicionId, payloadJson);
@@ -162,11 +124,8 @@ export const usePortfolioForm = () => {
   const guardarCambiosFilaDirecto = async (id, camposModificados) => {
     try {
       if (!id || id === "undefined") throw new Error(`ID inválido: ${id}`);
-
       const payloadJson = {
-        profile_id:
-          camposModificados.profile_id ||
-          "c20df547-0648-433b-85fe-d1912423a677",
+        profile_id: camposModificados.profile_id || PROFILE_ID_DEFAULT,
         destino: camposModificados.destino,
         nombre: camposModificados.nombre || null,
         modelo: camposModificados.modelo || null,
@@ -178,10 +137,8 @@ export const usePortfolioForm = () => {
         clasificacion_calzado: camposModificados.clasificacionCalzado || null,
         estado: camposModificados.estado || "activo",
       };
-
       delete payloadJson.id;
       delete payloadJson._id;
-
       return await proyectoService.actualizar(id, payloadJson);
     } catch (error) {
       console.error("❌ Error en guardarCambiosFilaDirecto:", error);
@@ -209,7 +166,7 @@ export const usePortfolioForm = () => {
     validarFormulario,
     setIsModalOpen,
     registrarCambio,
-    manejarCambioFoto, // 👈 Conectada para tu componente de carga de foto
+    manejarCambioFoto,
     handleVerVistaPrevia,
     resetFormulario,
     prepararEdicion,

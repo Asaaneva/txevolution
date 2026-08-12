@@ -1,4 +1,3 @@
-// ✅ EL HOCH /usePortfolioPage.js DEBE QUEDAR SOLO CON LÓGICA Y ESTADO:
 import { useEffect, useState } from "react";
 import { proyectoService } from "../services/proyectoService";
 import { usePortfolioForm } from "./usePortfolioForm";
@@ -39,13 +38,20 @@ export const usePortfolioPage = () => {
     cargarVitrinaDesdeElBackend();
   }, []);
 
+  // esto era el error de no guardado conecta los datos del formulario con la ejecución del modal
+  const handleConfirmarGuardado = async () => {
+    await portfolioModal.ejecutarPublicarProyecto(
+      portfolioForm.formData,
+      portfolioForm.archivoFisicoReal,
+      portfolioForm.proyectoEdicionId
+    );
+  };
+
   const handleSubmitForm = (e) => {
     if (e && typeof e.preventDefault === "function") e.preventDefault();
 
-    // 1. Ejecuta la validación que viene de portfolioForm
     const esValido = portfolioForm.handleVerVistaPrevia(e);
 
-    // 2. Si hay errores, se detiene y NO abre el modal
     if (
       esValido === false ||
       Object.keys(portfolioForm.validarFormulario()).length > 0
@@ -53,7 +59,6 @@ export const usePortfolioPage = () => {
       return;
     }
 
-    // 3. 🚨 ¡ESTO ES LO QUE FALTABA! Si todo está OK, abre el modal de vista previa
     portfolioModal.setIsModalOpen(true);
   };
 
@@ -74,6 +79,7 @@ export const usePortfolioPage = () => {
     cargarVitrinaDesdeElBackend,
     handleEliminar,
     handleSubmitForm,
+    handleConfirmarGuardado,
     ...portfolioForm,
     ...portfolioModal,
   };
